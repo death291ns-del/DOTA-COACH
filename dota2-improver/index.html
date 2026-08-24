@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dota 2 Rank Coach & Improver</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Skills Radar -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fa-solid fa-fire-flame-simple crimson-text"></i>
+                <span class="logo-text">DOTA 2 <span class="accent-text">COACH</span></span>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-cubes-split"></i> Dashboard
+                </button>
+                <button class="nav-item" data-tab="learning">
+                    <i class="fa-solid fa-graduation-cap"></i> Learning Center
+                </button>
+                <button class="nav-item" data-tab="journal">
+                    <i class="fa-solid fa-book-bookmark"></i> Match Journal
+                </button>
+                <button class="nav-item" data-tab="timings">
+                    <i class="fa-solid fa-stopwatch-20"></i> Live Companion
+                </button>
+                <button class="nav-item" data-tab="heroes">
+                    <i class="fa-solid fa-dna"></i> Hero Pool
+                </button>
+                <button class="nav-item" data-tab="explorer">
+                    <i class="fa-solid fa-book-atlas gold-text"></i> Hero Explorer (124+)
+                </button>
+                <button class="nav-item" data-tab="tierlist">
+                    <i class="fa-solid fa-ranking-star crimson-text"></i> Patch Tier List
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-sliders"></i> Config Settings
+                </button>
+            </nav>
+
+            <!-- Gamification XP Bar in Sidebar -->
+            <div class="xp-sidebar-widget">
+                <div class="xp-header">
+                    <span>COACH LEVEL <strong id="sidebar-level">1</strong></span>
+                    <span id="sidebar-xp-ratio">0/100 XP</span>
+                </div>
+                <div class="xp-bar-outer">
+                    <div class="xp-bar-inner" id="sidebar-xp-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="profile-summary" id="profile-summary">
+                <div class="avatar-placeholder">
+                    <i class="fa-solid fa-user-ninja"></i>
+                </div>
+                <div class="profile-info">
+                    <span class="profile-name" id="sidebar-player-name">Guest Player</span>
+                    <span class="profile-rank" id="sidebar-player-rank">Unlinked Steam ID</span>
+                </div>
+            </div>
+
+            <!-- Buy Me A Coffee Button -->
+            <div style="padding: 0 16px 16px;">
+                <button class="btn btn-primary" id="btn-open-coffee-modal" style="width: 100%; background: linear-gradient(135deg, #d4af37, #e67e22); border: none; font-weight: 700; color: #0f1015; text-shadow: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212,175,55,0.25);">
+                    <i class="fa-solid fa-mug-hot" style="font-size: 16px;"></i> เลี้ยงกาแฟผู้พัฒนา ☕
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Tab: Dashboard -->
+            <section id="dashboard" class="tab-content active">
+                <header class="content-header">
+                    <div class="header-title-area">
+                        <h1>Dashboard & Training Hub</h1>
+                        <p class="subtitle">ระบบวิเคราะห์ข้อผิดพลาดเพื่อยกกระดับแรงก์ของคุณ</p>
+                    </div>
+                    <div id="connection-badge" class="badge badge-error">Not Syncing</div>
+                </header>
+
+                <!-- Focus Skill of the Day Widget -->
+                <div class="card mb-20" style="border-left: 3px solid #d4af37;">
+                    <div class="card-header" style="padding: 10px 16px;">
+                        <h3 style="margin:0; font-size:14px;"><i class="fa-solid fa-bullseye gold-text"></i> 🎯 Focus Skill ประจำวัน</h3>
+                        <button class="btn btn-small btn-secondary btn-goto-tab" data-target="heroes" style="font-size:11px;">เปลี่ยนเป้าหมาย</button>
+                    </div>
+                    <div class="card-body" style="padding: 12px 16px;" id="focus-skill-widget">
+                        <p class="text-secondary"><i class="fa-solid fa-circle-info"></i> ยังไม่ได้ตั้งเป้าทักษะวันนี้ — ไปที่ Hero Pool และกด "ตั้งเป้าวันนี้"</p>
+                    </div>
+                </div>
+
+                <!-- Pre-Match Mindset Checklist Banner -->
+                <div class="mindset-banner mb-20">
+                    <div class="banner-body">
+                        <h3><i class="fa-solid fa-brain gold-text"></i> Pre-Match Mindset Checklist</h3>
+                        <p>เช็คความพร้อมของสมาธิและวางแผนฮีโร่ก่อนกดเริ่มเกมเพื่อป้องกันการสุ่มเลือกแล้ว Tilt</p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-open-mindset"><i class="fa-solid fa-clipboard-check"></i> เช็คลิสต์ก่อนหาห้อง</button>
+                </div>
+
+                <div class="grid-layout mb-20">
+                    <!-- Daily Target Card -->
+                    <div class="card card-span-2">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-bullseye crimson-text"></i> Daily Training Tracker</h3>
+                        </div>
+                        <div class="card-body daily-target-container">
+                            <div class="progress-ring-wrapper">
+                                <svg class="progress-ring" width="120" height="120">
+                                    <circle class="progress-ring__circle-bg" stroke="#1a1a1c" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                    <circle class="progress-ring__circle" id="daily-progress-circle" stroke="#cc1f29" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                </svg>
+                                <div class="progress-ring-text">
+                                    <span id="completed-games">0</span>/<span id="target-games">3</span>
+                                    <span class="small-label">Games</span>
+                                </div>
+                            </div>
+                            <div class="daily-program-info">
+                                <h4 id="program-status-title">ยังไม่ได้เริ่มซ้อมวันนี้</h4>
+                                <p id="program-status-desc">เล่นให้ครบจำนวนตาอย่างมีสมาธิ บันทึกข้อผิดพลาดเพื่อรับค่า XP พัฒนาฝีมือ</p>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" id="btn-add-game"><i class="fa-solid fa-gamepad"></i> บันทึกเล่นเกมสด</button>
+                                    <button class="btn btn-secondary" id="btn-reset-daily">รีเซ็ตเป้าหมายประจำวัน</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills Radar Chart Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-spider gold-text"></i> Skills Weakness Radar</h3>
+                        </div>
+                        <div class="card-body flex-center" style="min-height: 200px;">
+                            <div class="chart-container" style="position: relative; height: 210px; width: 100%;">
+                                <canvas id="mistakeChart"></canvas>
+                                <div id="no-chart-data" class="no-data-msg">ยังไม่มีสถิติข้อผิดพลาด บันทึกแมตช์ใน Journal เพื่อประมวลผลกราฟสกิล</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MMR Progress & Draft Counter Row -->
+                <div class="grid-layout mb-20">
+                    <!-- MMR Rank Progress Tracker Card -->
+                    <div class="card card-span-2">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3><i class="fa-solid fa-chart-line gold-text"></i> MMR Rank Progress Tracker</h3>
+                            <div id="mmr-rank-badge-display" style="font-size:13px; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid #d4af37; padding:4px 12px; border-radius:20px; color:#d4af37;">
+                                <i class="fa-solid fa-shield-halved"></i> MMR: <span id="current-mmr-num">2,200</span> (<span id="current-rank-tier">Archon 👑</span>)
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 180px; position: relative;">
+                                <canvas id="mmr-chart"></canvas>
+                            </div>
+                            <div style="display:flex; gap:10px; margin-top:12px; align-items:center; flex-wrap:wrap;">
+                                <input type="number" id="manual-mmr-input" placeholder="ใส่ MMR ปัจจุบันของคุณ (เช่น 2500)" style="width:220px; padding:6px 12px; background:var(--bg-card-hover); border:1px solid var(--border-color); border-radius:6px; color:#fff; font-size:13px;">
+                                <button class="btn btn-small btn-primary" id="btn-update-mmr-manual"><i class="fa-solid fa-check"></i> อัปเดต MMR</button>
+                                <span style="font-size:11px; color:#8e95a5;">(คำนวณ +25 / -25 อัตโนมัติเมื่อบันทึกแมตช์)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Draft Enemy Counter & Item Assistant Widget -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-shield-cat crimson-text"></i> Enemy Draft Counter Helper</h3>
+                        </div>
+                        <div class="card-body" style="padding:14px;">
+                            <p style="font-size:12px; color:#8e95a5; margin-bottom:10px;">เลือกฮีโร่ตัวคีย์หลักของศัตรูในเกมนี้ เพื่อดูไอเทมแก้ทางและเทคนิค Counter:</p>
+                            <select id="draft-enemy-select" style="width:100%; padding:8px 12px; background:var(--bg-card-hover); border:1px solid var(--border-color); border-radius:6px; color:#fff; font-size:13px; margin-bottom:12px;">
+                                <option value="">-- เลือกฮีโร่ศัตรูที่ต้องการ Counter --</option>
+                            </select>
+                            <div id="draft-counter-result" style="font-size:12px; line-height:1.6;">
+                                <p style="color:#8e95a5; text-align:center;"><i class="fa-solid fa-crosshairs"></i> เลือกฮีโร่ศัตรูเพื่อดูคำแนะนำการออกไอเทมแก้ทาง</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    <div class="card card-span-2">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-history"></i> Match History & Quick Error Log</h3>
+                            <button class="btn btn-small btn-secondary" id="btn-sync-opendota"><i class="fa-solid fa-rotate"></i> Sync API</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="match-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ฮีโร่</th>
+                                            <th>ผลลัพธ์</th>
+                                            <th>K / D / A</th>
+                                            <th>วิเคราะห์แมตช์</th>
+                                            <th>Fast Log Mistake</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="api-matches-list">
+                                        <tr>
+                                            <td colspan="5" class="text-center">กรุณาตั้งค่า Steam ID 32-bit เพื่อดึงประวัติการเล่นแมตช์สด</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements & Badges Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-medal gold-text"></i> My Achievements</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="badge-grid" id="achievements-container">
+                                <!-- Dynamic Achievements -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Coach Analysis Card -->
+                    <div class="card card-span-3">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-robot crimson-text"></i> Automated AI Coach (วิเคราะห์สถิติจริงจากประวัติการเล่น)</h3>
+                            <div class="badge badge-gold" id="coach-analysis-badge">Ready for Sync</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="coach-analysis-content">
+                                <p class="text-secondary text-center" style="padding: 20px 0;">
+                                    <i class="fa-solid fa-circle-info gold-text"></i> กรุณาใส่ Steam ID ในหน้า Settings แล้วกดปุ่ม <strong>"Sync API"</strong> ตัวระบบจะวิเคราะห์ประวัติการเล่นล่าสุด 20 เกมของคุณ และให้คำแนะนำแบบเจาะลึกทันที
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Pre-Match Mindset Checklist Modal/Area -->
+            <div id="mindset-modal" class="modal-overlay hidden-form">
+                <div class="modal-content card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-shield-cat gold-text"></i> Pre-Match Mindset Checklist</h3>
+                        <button class="btn-close" id="btn-close-mindset">&times;</button>
+                    </div>
+                    <div class="card-body">
+                        <form id="mindset-form">
+                            <div class="form-group">
+                                <label>1. สภาพจิตใจและสภาพร่างกายตอนนี้เป็นอย่างไร?</label>
+                                <div class="mistake-checkbox-grid">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" required>
+                                        <span class="checkmark"></span> พักผ่อนเพียงพอและสมองปลอดโปร่ง
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" required>
+                                        <span class="checkmark"></span> ไม่อยู่ในภาวะอารมณ์เสีย หรือเพิ่งแพ้ยับมา (No Tilt)
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" required>
+                                        <span class="checkmark"></span> มีน้ำดื่มพร้อมและไม่มีสิ่งกวนสมาธิ
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="m-hero">2. เกมนี้ตั้งใจจะเล่นฮีโร่ตัวไหน? (เลือกจาก Pool แนะนำ)</label>
+                                <select id="m-hero-select">
+                                    <!-- Dynamic Hero Options -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>3. เป้าหมายหลักในเกมนี้ของคุณคืออะไร? (เลือกเพื่อจดจ่อสมาธิ)</label>
+                                <select id="m-focus">
+                                    <option value="Focus on Lasthits & Farm pattern">เน้นเก็บ Last Hit และฟาร์มให้ไวที่สุด (แครี่)</option>
+                                    <option value="Focus on Map Awareness & Map movement">เน้นดูมินิแมพทุก 5 วินาที เพื่อเช็คการแก๊ง</option>
+                                    <option value="Focus on River Runes control">เน้นเดินเช็คและคุมรูนแม่น้ำทุกๆ 2 นาที (มิดเลน)</option>
+                                    <option value="Focus on Warding & Save Item Timings">เน้นปักหวอดปะทะและออกไอเทมเซฟเพื่อนร่วมทีม (ซัพพอร์ต)</option>
+                                    <option value="Stay calm and communicate with team positivity">รักษาอารมณ์ให้คงที่ สื่อสารเชิงบวกเท่านั้น</option>
+                                </select>
+                            </div>
+                            <div id="mindset-hero-tips" class="hero-tips-box mb-10 hidden-form">
+                                <!-- Tips of selected hero -->
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">ยืนยันสมาธิ & เริ่มเกมนับเวลา</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Learning Center -->
+            <section id="learning" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Learning Center</h1>
+                        <p class="subtitle">หน้าที่หลักและวิธีการพัฒนาฝีมือตามตำแหน่งการเล่น (Positions 1-5)</p>
+                    </div>
+                </header>
+
+                <div class="role-selector-bar">
+                    <button class="role-tab-btn active" data-role="pos1">Pos 1 (Carry)</button>
+                    <button class="role-tab-btn" data-role="pos2">Pos 2 (Mid)</button>
+                    <button class="role-tab-btn" data-role="pos3">Pos 3 (Offlane)</button>
+                    <button class="role-tab-btn" data-role="pos4">Pos 4 (Soft Supp)</button>
+                    <button class="role-tab-btn" data-role="pos5">Pos 5 (Hard Supp)</button>
+                </div>
+
+                <!-- Role Details Wrapper -->
+                <div id="role-details-container" class="card">
+                    <!-- Dynamic details content injected via JS -->
+                </div>
+            </section>
+
+            <!-- Tab: Match Journal -->
+            <section id="journal" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Match Journal</h1>
+                        <p class="subtitle">จดบันทึกวิเคราะห์สาเหตุการแพ้ชนะเพื่อจดจำจุดผิดพลาด</p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-new-journal-entry"><i class="fa-solid fa-pen-nib"></i> เขียนบันทึกวิเคราะห์เกม</button>
+                </header>
+
+                <div class="journal-layout">
+                    <!-- Write Entry Form -->
+                    <div id="journal-form-container" class="card hidden-form mb-20">
+                        <div class="card-header">
+                            <h3 id="journal-form-title">บันทึกแมตช์ทบทวนการเล่น</h3>
+                            <button class="btn-close" id="btn-close-journal-form">&times;</button>
+                        </div>
+                        <div class="card-body">
+                            <form id="journal-form">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="j-hero">ฮีโร่ที่เล่น <span class="required">*</span></label>
+                                        <input type="text" id="j-hero" placeholder="เช่น Anti-Mage, Crystal Maiden" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="j-result">ผลลัพธ์ <span class="required">*</span></label>
+                                        <select id="j-result" required>
+                                            <option value="win">ชนะ (Win)</option>
+                                            <option value="lose">แพ้ (Lose)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="j-kda">KDA (Kills/Deaths/Assists)</label>
+                                        <input type="text" id="j-kda" placeholder="เช่น 5/2/12">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="j-matchid">Match ID (สำหรับอ้างอิง Dotabuff)</label>
+                                        <input type="text" id="j-matchid" placeholder="เช่น 7392812903">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>เกิดจุดบกพร่องข้อใดขึ้นบ้างในแมตช์นี้? (เลือกเพื่อนำไปประมวลผลเรดาร์ชาร์ต)</label>
+                                    <div class="mistake-checkbox-grid">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" name="mistakes" value="Positioning">
+                                            <span class="checkmark"></span> Positioning (ยืนตำแหน่งผิดพลาด, ขาตาย, เข้าลึก)
+                                        </label>
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" name="mistakes" value="Map Awareness">
+                                            <span class="checkmark"></span> Map Awareness (ไม่ดูแมพ, โดนแก๊งเลนฟรี)
+                                        </label>
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" name="mistakes" value="Item Build">
+                                            <span class="checkmark"></span> Item Build (ออกของไม่ถูกจังหวะแก้เกม)
+                                        </label>
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" name="mistakes" value="Mechanics/Skills">
+                                            <span class="checkmark"></span> Skill/Item Mechanics (กดสกิลวืด, ช้าเกินไป)
+                                        </label>
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" name="mistakes" value="Last Hitting/Farm">
+                                            <span class="checkmark"></span> Farming Patterns (ฟาร์มไม่ทันครีปป่า, LH น้อย)
+                                        </label>
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" name="mistakes" value="Mental State/Tilt">
+                                            <span class="checkmark"></span> Tilt/Decision (ใจร้อนบุ่มบ่าม, ก่นด่าทีม)
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="j-notes">สิ่งที่ควรปรับปรุง/สิ่งที่ทำได้ดีแล้วในเกมนี้ (เขียนสรุปสั้นๆ)</label>
+                                    <textarea id="j-notes" rows="4" placeholder="เช่น เลนแรกโดนกดดันหนัก ต้องพึ่งครีปป่าไวขึ้น ครั้งหน้าจะซื้อเกราะส้มมาช่วยทนดาเมจแต่เนิ่นๆ..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-block">บันทึกทบทวนแมตช์ (+25 XP)</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Journal Timeline / List -->
+                    <div id="journal-entries-container">
+                        <!-- Dynamic Entries -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Game Timings & Live Companion -->
+            <section id="timings" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Live In-Game Companion</h1>
+                        <p class="subtitle">โหมดจอสองเพื่อช่วยเหลือและวิเคราะห์เวลาระหว่างการต่อสู้จริง</p>
+                    </div>
+                </header>
+
+                <div class="grid-layout">
+                    <!-- Interactive Match Timer -->
+                    <div class="card card-span-2">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-bullhorn crimson-text"></i> Match Timer & Interactive Coach</h3>
+                        </div>
+                        <div class="card-body text-center timer-dashboard">
+                            <div class="timer-display" id="in-game-timer">00:00</div>
+                            <div class="timer-controls">
+                                <button class="btn btn-success btn-large" id="btn-timer-start-stop">
+                                    <i class="fa-solid fa-play"></i> เริ่มตัวเตือนเวลากลยุทธ์
+                                </button>
+                                <button class="btn btn-secondary" id="btn-timer-reset">รีเซ็ต</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Companion Advice Box -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-comments gold-text"></i> Live Strategy Advice</h3>
+                        </div>
+                        <div class="card-body coach-advice-body" id="coach-advice-container">
+                            <p class="text-secondary text-center">เริ่มตัวเตือนเวลาเพื่อเปิดรับวิเคราะห์กลยุทธ์ตามนาทีของเกม</p>
+                        </div>
+                    </div>
+
+                    <!-- Voice Alerts Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-bell"></i> Audio Alerts Toggles</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert-toggle-list">
+                                <label class="switch-container">
+                                    <span>Bounty Runes (ทุก 3 นาที)</span>
+                                    <input type="checkbox" id="alert-bounty" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                                <label class="switch-container">
+                                    <span>Power Runes (ทุก 2 นาที)</span>
+                                    <input type="checkbox" id="alert-power" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                                <label class="switch-container">
+                                    <span>Wisdom Runes (ทุก 7 นาที)</span>
+                                    <input type="checkbox" id="alert-wisdom" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                                <label class="switch-container">
+                                    <span>Stack/Pull Camps (วิที่ 45)</span>
+                                    <input type="checkbox" id="alert-stack">
+                                    <span class="switch-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timings Guide Table -->
+                    <div class="card card-span-2">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list-ol"></i> Essential Timings Cheat-sheet</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="reference-table">
+                                    <thead>
+                                        <tr>
+                                            <th>เวลาในเกม</th>
+                                            <th>เป้าหมายหลัก</th>
+                                            <th>ประเภท</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>นาที 00:00</td>
+                                            <td>ดึง Bounty Runes ชนเลนครีป บล็อกเลน</td>
+                                            <td><span class="badge badge-gold">Start</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>นาที 02:00</td>
+                                            <td>รูนแม่น้ำคู่แรกเกิด ช่วยกันคุมรูนไม่ให้ฝั่งตรงข้ามเก็บฟรี</td>
+                                            <td><span class="badge badge-crimson">Runes</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>นาที 07:00</td>
+                                            <td>XP Wisdom Runes เกิด ซัพพอร์ตต้องคอยแย่งเพื่อทีมเลเวลไม่ห่าง</td>
+                                            <td><span class="badge badge-cyan">Wisdom</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>นาที 20:00</td>
+                                            <td>Tormentor บอสแก้วเกิด ชวนซัพพอร์ตไปตบเพื่อเอา Shard ฟรี</td>
+                                            <td><span class="badge badge-primary">Objectives</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Hero Pool Optimizer -->
+            <section id="heroes" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Hero Pool Optimizer</h1>
+                        <p class="subtitle">จำกัดและฝึกฝนเฉพาะฮีโร่หลักเพื่อการเก็บคะแนนแรงก์ที่มีประสิทธิภาพสูงสุด (3-5 ตัว)</p>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-secondary" id="btn-open-all-heroes"><i class="fa-solid fa-book-atlas gold-text"></i> ค้นหา Build ฮีโร่ทั้งหมด 124+ ตัว</button>
+                        <button class="btn btn-primary" id="btn-add-pool-hero"><i class="fa-solid fa-folder-plus"></i> เพิ่มฮีโร่ซ้อมหลัก</button>
+                    </div>
+                </header>
+
+                <div class="hero-layout">
+                    <!-- Add Hero Form -->
+                    <div id="hero-form-container" class="card hidden-form mb-20">
+                        <div class="card-header">
+                            <h3>เพิ่มฮีโร่หลักในพูล</h3>
+                            <button class="btn-close" id="btn-close-hero-form">&times;</button>
+                        </div>
+                        <div class="card-body">
+                            <form id="hero-form">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="h-name">ชื่อฮีโร่ <span class="required">*</span></label>
+                                        <input type="text" id="h-name" placeholder="เช่น Juggernaut, Invoker" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="h-role">Position <span class="required">*</span></label>
+                                        <select id="h-role" required>
+                                            <option value="Pos 1 (Carry)">Pos 1 (Carry)</option>
+                                            <option value="Pos 2 (Mid)">Pos 2 (Mid)</option>
+                                            <option value="Pos 3 (Offlane)">Pos 3 (Offlane)</option>
+                                            <option value="Pos 4 (Soft Support)">Pos 4 (Soft Support)</option>
+                                            <option value="Pos 5 (Hard Support)">Pos 5 (Hard Support)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="h-item-timing">ไอเทมหลักสำคัญ & นาทีเป้าหมาย</label>
+                                        <input type="text" id="h-item-timing" placeholder="เช่น Battle Fury (นาที 12-14)">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="h-tips">เคล็ดลับการเล่นเฉพาะตัวของฮีโร่นี้</label>
+                                    <textarea id="h-tips" rows="3" placeholder="เช่น พยายามหลีกเลี่ยงการไฟต์ช่วงสิบนาทีแรก ห้ามใช้สกิลมั่วซั่วหลังกดเลน..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">บันทึกเข้าพูลฮีโร่</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Meta Recommended Heroes (Patch 7.41e) -->
+                    <div class="card mb-20">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-fire crimson-text"></i> Meta Recommended Heroes (Patch 7.41e)</h3>
+                            <span class="badge badge-gold">TI 2026 Competitive Meta</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="subtitle mb-15">คลิกปุ่ม "+" บนการ์ดฮีโร่เมต้า เพื่อคัดลอกลงในพูลซ้อมหลักของคุณทันที</p>
+                            <div class="role-selector-bar" id="meta-role-selector">
+                                <button class="meta-role-btn active" data-meta-role="Pos 1 (Carry)">Pos 1 (Carry)</button>
+                                <button class="meta-role-btn" data-meta-role="Pos 2 (Mid)">Pos 2 (Mid)</button>
+                                <button class="meta-role-btn" data-meta-role="Pos 3 (Offlane)">Pos 3 (Offlane)</button>
+                                <button class="meta-role-btn" data-meta-role="Pos 4 (Soft Support)">Pos 4 (Soft Support)</button>
+                                <button class="meta-role-btn" data-meta-role="Pos 5 (Hard Support)">Pos 5 (Hard Support)</button>
+                            </div>
+                            <div class="hero-grid" id="meta-heroes-container">
+                                <!-- Meta recommended heroes will be dynamically loaded here based on role selection -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="mb-20"><i class="fa-solid fa-user-check green-text"></i> My Active Hero Pool (ฮีโร่ที่ฉันเลือกซ้อม)</h3>
+
+                    <!-- List of Pool Heroes -->
+                    <div class="hero-grid" id="pool-heroes-container">
+                        <!-- Heroes Injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Hero Explorer (All 124+ Heroes) -->
+            <section id="explorer" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Dota 2 Hero Build Explorer (124+ Heroes)</h1>
+                        <p class="subtitle">ค้นหาและดู Dotabuff Live Build, Item Popularity & Playstyles ของฮีโร่ทุกตัวใน Dota 2</p>
+                    </div>
+                </header>
+
+                <div class="card mb-20">
+                    <div class="card-body">
+                        <div class="explorer-filter-bar" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                            <div class="search-input-wrapper" style="flex: 1; min-width: 260px; position: relative;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 12px; color: #8e95a5;"></i>
+                                <input type="text" id="tab-explorer-search" placeholder="พิมพ์ชื่อฮีโร่... (เช่น Invoker, Pudge, SF, AM, Kez)" style="width: 100%; padding-left: 40px; height: 40px; background: var(--bg-card-hover); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 14px;">
+                            </div>
+                            <div class="btn-group" id="tab-attr-filter-group">
+                                <button class="btn btn-small btn-secondary active" data-attr="all">ทั้งหมด (124+)</button>
+                                <button class="btn btn-small btn-secondary" data-attr="str">🔴 Strength</button>
+                                <button class="btn btn-small btn-secondary" data-attr="agi">🟢 Agility</button>
+                                <button class="btn btn-small btn-secondary" data-attr="int">🔵 Intelligence</button>
+                                <button class="btn btn-small btn-secondary" data-attr="all_attr">🟣 Universal</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-heroes-grid" class="all-heroes-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px;">
+                    <div class="text-center p-30 card-span-3"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดรายชื่อฮีโร่...</div>
+                </div>
+            </section>
+
+            <!-- Tab: Patch Tier List (Patch 7.41e Meta) -->
+            <section id="tierlist" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Dota 2 Meta Tier List (Patch 7.41e)</h1>
+                        <p class="subtitle">ตารางอันดับฮีโร่ที่ได้เปรียบสูงสุดใน High MMR Ranked แนะนำให้เลือกซ้อม S-Tier และ A-Tier เพื่อการไต่แร้งก์ที่รวดเร็ว</p>
+                    </div>
+                </header>
+
+                <div class="card mb-20">
+                    <div class="card-body">
+                        <div class="role-selector-bar" id="tierlist-role-group">
+                            <button class="role-btn active" data-tier-role="Pos 1 (Carry)">Pos 1 (Carry)</button>
+                            <button class="role-btn" data-tier-role="Pos 2 (Mid)">Pos 2 (Mid)</button>
+                            <button class="role-btn" data-tier-role="Pos 3 (Offlane)">Pos 3 (Offlane)</button>
+                            <button class="role-btn" data-tier-role="Pos 4 (Soft Support)">Pos 4 (Soft Support)</button>
+                            <button class="role-btn" data-tier-role="Pos 5 (Hard Support)">Pos 5 (Hard Support)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tierlist-content-container">
+                    <!-- Dynamic Tier List injected by JS -->
+                </div>
+            </section>
+
+            <!-- Tab: Settings -->
+            <section id="settings" class="tab-content">
+                <header class="content-header">
+                    <h1>Config Settings & Profile Links</h1>
+                </header>
+
+                <div class="grid-layout">
+                    <!-- Steam ID Setting -->
+                    <div class="card card-span-2">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-id-card"></i> Link Steam ID & Dotabuff Profile</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="settings-form">
+                                <div class="form-group">
+                                    <label for="settings-steamid">Steam Account ID (32-bit ID)</label>
+                                    <input type="text" id="settings-steamid" placeholder="ตัวอย่างเช่น: 70388657">
+                                    <small class="form-help">คุณสามารถหา 32-bit ID ได้จากหน้ารายละเอียดโปรไฟล์ในตัวเกม Dota 2 (ใต้ชื่อโปรไฟล์หลักของคุณ) หรือท้าย URL โปรไฟล์ Dotabuff ของคุณ</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="settings-dotabuff">Dotabuff Profile Link</label>
+                                    <input type="url" id="settings-dotabuff" placeholder="https://www.dotabuff.com/players/xxxxxxxxx">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="settings-daily-target">เป้าหมายจำนวนเกมซ้อมต่อวัน</label>
+                                    <input type="number" id="settings-daily-target" min="1" max="15" value="3">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">บันทึกการตั้งค่า</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Help / Instruction Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-question-circle"></i> คู่มือแนะนำด่วน</h3>
+                        </div>
+                        <div class="card-body font-small line-height-16">
+                            <p><strong>เริ่มต้นใช้งาน:</strong></p>
+                            <ol class="help-steps">
+                                <li>ใส่ Steam ID ในหน้า Settings ระบบจะดึงภาพและแมตช์มาให้</li>
+                                <li>ไปที่แท็บ <strong>Learning Center</strong> เพื่อเรียนรู้เป้าหมายและแนวทางแก้ไขในตำแหน่งที่คุณเล่น</li>
+                                <li>กดใช้ <strong>Pre-Match Mindset Checklist</strong> ก่อนเริ่มหาห้องเล่นทุกวัน</li>
+                                <li>เปิด <strong>Live Companion</strong> ระหว่างเล่นเกมจริงเพื่อคอยฟังคำแจ้งเตือนรูน/บอส และกลยุทธ์</li>
+                                <li>จดแมตช์หลังเลิกเล่นเพื่อดูเรดาร์ประเมินสกิลของตัวเอง</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- All Heroes Build Explorer Modal -->
+            <div id="all-heroes-modal" class="modal-overlay hidden-form" style="z-index: 2500;">
+                <div class="modal-content card" style="max-width: 960px; max-height: 90vh; display: flex; flex-direction: column;">
+                    <div class="card-header">
+                        <div>
+                            <h3 style="margin: 0;"><i class="fa-solid fa-book-atlas gold-text"></i> Dota 2 Hero Build Explorer (124+ Heroes)</h3>
+                            <p class="subtitle" style="margin-top: 4px;">คลิกฮีโร่ตัวใดก็ได้เพื่อเปิดดู Dotabuff Live Build, Item Popularity & Playstyles</p>
+                        </div>
+                        <button class="btn-close" id="btn-close-all-heroes">&times;</button>
+                    </div>
+                    <div class="card-body" style="overflow-y: auto; flex: 1;">
+                        <div class="explorer-filter-bar mb-20" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            <div class="search-input-wrapper" style="flex: 1; min-width: 240px; position: relative;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 12px; color: #8e95a5;"></i>
+                                <input type="text" id="hero-explorer-search" placeholder="พิมพ์ชื่อฮีโร่... (เช่น Invoker, Pudge, SF, AM)" style="width: 100%; padding-left: 36px; height: 38px; background: var(--bg-card-hover); border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+                            </div>
+                            <div class="btn-group" id="attr-filter-group">
+                                <button class="btn btn-small btn-secondary active" data-attr="all">ทั้งหมด (124+)</button>
+                                <button class="btn btn-small btn-secondary" data-attr="str">🔴 Strength</button>
+                                <button class="btn btn-small btn-secondary" data-attr="agi">🟢 Agility</button>
+                                <button class="btn btn-small btn-secondary" data-attr="int">🔵 Intelligence</button>
+                                <button class="btn btn-small btn-secondary" data-attr="all_attr">🟣 Universal</button>
+                            </div>
+                        </div>
+
+                        <div id="all-heroes-grid" class="all-heroes-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;">
+                            <div class="text-center p-30 card-span-3"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดรายชื่อฮีโร่...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donate Coffee PromptPay QR Modal -->
+            <div id="coffee-modal" class="modal-overlay hidden-form" style="z-index: 3500;">
+                <div class="modal-content card" style="max-width: 440px; text-align: center; border: 2px solid #d4af37; box-shadow: 0 0 30px rgba(212,175,55,0.35);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(230,126,34,0.2)); justify-content: space-between; border-bottom: 1px solid rgba(212,175,55,0.3);">
+                        <h3 style="margin: 0; color: #d4af37; font-size: 18px;"><i class="fa-solid fa-mug-hot"></i> เลี้ยงกาแฟสนับสนุนผู้พัฒนา ☕</h3>
+                        <button class="btn-close" id="btn-close-coffee-modal">&times;</button>
+                    </div>
+                    <div class="card-body" style="padding: 24px;">
+                        <p style="font-size: 14px; color: #c0c9d8; margin-top: 0; margin-bottom: 16px; line-height: 1.6;">
+                            หากเครื่องมือ <strong>Dota 2 Rank Improver</strong> ช่วยให้คุณเล่นเก่งขึ้นและไต่แร้งก์ได้จริง สามารถสแกน QR Code PromptPay สนับสนุนค่ากาแฟให้ผู้พัฒนาได้เลยครับ ขอบพระคุณล่วงหน้าครับ! ❤️
+                        </p>
+                        
+                        <div style="background: #ffffff; padding: 16px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 25px rgba(0,0,0,0.5); margin-bottom: 16px; border: 3px solid #d4af37;">
+                            <img src="assets/coffee_qr.png" alt="PromptPay QR Code" style="width: 220px; height: 220px; display: block; object-fit: contain;">
+                        </div>
+
+                        <div style="font-size: 13px; color: #8e95a5;">
+                            <i class="fa-solid fa-shield-halved gold-text"></i> สแกนผ่านแอปธนาคารใดก็ได้ด้วย <strong>PromptPay</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="storage.js"></script>
+    <script src="js/timings.js"></script>
+    <script src="timings.js"></script>
+    <script src="js/app.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
