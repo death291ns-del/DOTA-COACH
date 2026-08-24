@@ -48,10 +48,6 @@ body {
     padding: 20px 0;
     flex-shrink: 0;
     box-shadow: 5px 0 25px rgba(0, 0, 0, 0.4);
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
 }
 
 .logo-area {
@@ -261,7 +257,6 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     margin-bottom: 25px;
-    align-items: start;
 }
 
 .card-span-2 {
@@ -270,15 +265,6 @@ body {
 
 .card-span-3 {
     grid-column: span 3;
-}
-
-@media (max-width: 992px) {
-    .grid-layout {
-        grid-template-columns: 1fr !important;
-    }
-    .card-span-2, .card-span-3 {
-        grid-column: span 1 !important;
-    }
 }
 
 /* Card Styling */
