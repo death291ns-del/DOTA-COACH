@@ -25,6 +25,9 @@
                 <button class="nav-item active" data-tab="dashboard">
                     <i class="fa-solid fa-cubes-split"></i> Dashboard
                 </button>
+                <button class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-sliders gold-text"></i> Config Settings
+                </button>
                 <button class="nav-item" data-tab="learning">
                     <i class="fa-solid fa-graduation-cap"></i> Learning Center
                 </button>
@@ -42,9 +45,6 @@
                 </button>
                 <button class="nav-item" data-tab="tierlist">
                     <i class="fa-solid fa-ranking-star crimson-text"></i> Patch Tier List
-                </button>
-                <button class="nav-item" data-tab="settings">
-                    <i class="fa-solid fa-sliders"></i> Config Settings
                 </button>
             </nav>
 
@@ -659,35 +659,38 @@
 
             <!-- Tab: Settings -->
             <section id="settings" class="tab-content">
-                <header class="content-header">
-                    <h1>Config Settings & Profile Links</h1>
+                <header class="content-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h1>Config Settings & Profile Links</h1>
+                        <p class="subtitle">ตั้งค่าเชื่อมต่อบัญชี Steam ID, ลิงก์ Dotabuff และเป้าหมายการซ้อมประจำวัน</p>
+                    </div>
                 </header>
 
-                <div class="grid-layout">
+                <div class="grid-layout mb-20" style="align-items: start;">
                     <!-- Steam ID Setting -->
                     <div class="card card-span-2">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-id-card"></i> Link Steam ID & Dotabuff Profile</h3>
+                            <h3><i class="fa-solid fa-id-card gold-text"></i> Link Steam ID & Profile Settings</h3>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" style="padding: 20px;">
                             <form id="settings-form">
                                 <div class="form-group">
-                                    <label for="settings-steamid">Steam Account ID (32-bit ID)</label>
-                                    <input type="text" id="settings-steamid" placeholder="ตัวอย่างเช่น: 70388657">
-                                    <small class="form-help">คุณสามารถหา 32-bit ID ได้จากหน้ารายละเอียดโปรไฟล์ในตัวเกม Dota 2 (ใต้ชื่อโปรไฟล์หลักของคุณ) หรือท้าย URL โปรไฟล์ Dotabuff ของคุณ</small>
+                                    <label for="settings-steamid"><i class="fa-brands fa-steam"></i> Steam Account ID (32-bit ID)</label>
+                                    <input type="text" id="settings-steamid" placeholder="ตัวอย่างเช่น: 70388657" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px;">
+                                    <small class="form-help">หา 32-bit ID ได้จากหน้าโปรไฟล์ในเกม Dota 2 (ใต้ชื่อโปรไฟล์หลักของคุณ) หรือท้าย URL โปรไฟล์ Dotabuff</small>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="settings-dotabuff">Dotabuff Profile Link</label>
-                                    <input type="url" id="settings-dotabuff" placeholder="https://www.dotabuff.com/players/xxxxxxxxx">
+                                    <label for="settings-dotabuff"><i class="fa-solid fa-globe"></i> Dotabuff Profile Link</label>
+                                    <input type="url" id="settings-dotabuff" placeholder="https://www.dotabuff.com/players/xxxxxxxxx" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px;">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="settings-daily-target">เป้าหมายจำนวนเกมซ้อมต่อวัน</label>
-                                    <input type="number" id="settings-daily-target" min="1" max="15" value="3">
+                                    <label for="settings-daily-target"><i class="fa-solid fa-bullseye"></i> เป้าหมายจำนวนเกมซ้อมต่อวัน (Games/Day)</label>
+                                    <input type="number" id="settings-daily-target" min="1" max="15" value="3" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px;">
                                 </div>
 
-                                <button type="submit" class="btn btn-primary">บันทึกการตั้งค่า</button>
+                                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;"><i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า</button>
                             </form>
                         </div>
                     </div>
@@ -695,17 +698,23 @@
                     <!-- Help / Instruction Card -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-question-circle"></i> คู่มือแนะนำด่วน</h3>
+                            <h3><i class="fa-solid fa-question-circle cyan-text"></i> คู่มือแนะนำด่วน</h3>
                         </div>
-                        <div class="card-body font-small line-height-16">
-                            <p><strong>เริ่มต้นใช้งาน:</strong></p>
-                            <ol class="help-steps">
-                                <li>ใส่ Steam ID ในหน้า Settings ระบบจะดึงภาพและแมตช์มาให้</li>
-                                <li>ไปที่แท็บ <strong>Learning Center</strong> เพื่อเรียนรู้เป้าหมายและแนวทางแก้ไขในตำแหน่งที่คุณเล่น</li>
-                                <li>กดใช้ <strong>Pre-Match Mindset Checklist</strong> ก่อนเริ่มหาห้องเล่นทุกวัน</li>
-                                <li>เปิด <strong>Live Companion</strong> ระหว่างเล่นเกมจริงเพื่อคอยฟังคำแจ้งเตือนรูน/บอส และกลยุทธ์</li>
-                                <li>จดแมตช์หลังเลิกเล่นเพื่อดูเรดาร์ประเมินสกิลของตัวเอง</li>
+                        <div class="card-body font-small line-height-16" style="padding: 18px;">
+                            <p style="margin-top:0;"><strong>คำแนะนำเริ่มต้น:</strong></p>
+                            <ol class="help-steps" style="padding-left:18px; margin-bottom:0;">
+                                <li>ใส่ Steam ID เพื่อดึงประวัติแมตช์จริง</li>
+                                <li>เข้า <strong>Learning Center</strong> ดูวิธีเล่น Pos 1-5</li>
+                                <li>ใช้ <strong>Mindset Checklist</strong> ก่อนกดหาห้อง</li>
+                                <li>เปิด <strong>Live Companion</strong> ระหว่างแข่ง</li>
+                                <li>ดูอันดับฮีโร่ใน <strong>Patch Tier List 7.41e</strong></li>
                             </ol>
+
+                            <hr style="border-color: rgba(255,255,255,0.08); margin: 16px 0;">
+
+                            <button class="btn btn-primary" id="btn-settings-coffee" onclick="document.getElementById('coffee-modal').classList.remove('hidden-form')" style="width: 100%; background: linear-gradient(135deg, #d4af37, #e67e22); border: none; font-weight: 700; color: #0f1015;">
+                                <i class="fa-solid fa-mug-hot"></i> เลี้ยงกาแฟผู้พัฒนา ☕
+                            </button>
                         </div>
                     </div>
                 </div>
