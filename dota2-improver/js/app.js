@@ -622,6 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initPatchTierList();
     initCoffeeModal();
     initRankGuide();
+    initProSettingsGuide();
+    initPatchNotes();
     
     fetchHeroList();
     
@@ -2857,9 +2859,141 @@ const PATCH_TIERLIST_DATABASE = {
     }
 };
 
+// ============================================================
+// PATCH NOTES & META CHANGELOG (BUFFS & NERFS)
+// ============================================================
+const PATCH_NOTES_DATABASE = {
+    patchVersion: "7.41e",
+    buffs: [
+        { hero: "Juggernaut", detail: "ความเสียหาย Blade Fury เพิ่มขึ้นจาก 90/115/140/165 เป็น 100/125/150/175 ต่อวินาที, คูลดาวน์ Omnislash ลดลง 10 วินาทีทุกระดับ" },
+        { hero: "Shadow Fiend", detail: "ความเร็วในการโจมตีเพิ่มขึ้น +5 Base Attack Speed, รัศมี Requiem of Souls กว้างขึ้น +50" },
+        { hero: "Viper", detail: "ความเสียหายต่อวินาทีของ Poison Attack เพิ่มขึ้น +4, ดาเมจ Nethertoxin เพิ่มขึ้น 10%" },
+        { hero: "Hoodwink", detail: "ระยะยิง Sharpshooter ไกลขึ้น +100, Bushwhack รัศมีกว้างขึ้น +25" },
+        { hero: "Abaddon", detail: "ระยะฮีล/ดาเมจ Mist Coil เพิ่มขึ้น +50, ความเร็วเคลื่อนที่ Aphotic Shield เพิ่มขึ้น +15" },
+        { hero: "Centaur Warrunner", detail: "เกราะพื้นฐานเพิ่มขึ้น +1, ดาเมจ Hoof Stump เพิ่มขึ้น 20 ทุกระดับ" }
+    ],
+    nerfs: [
+        { hero: "Lone Druid", detail: "พลังชีวิตของ Spirit Bear ลดลง -100 ทุกระดับ, คูลดาวน์ True Form เพิ่มขึ้น +15 วินาที" },
+        { hero: "Meepo", detail: "ลดสแตทสเตตัสจาก Divid We Stand ลง 5%, สกิล Dig คูลดาวน์เพิ่มขึ้น +4 วินาที" },
+        { hero: "Tinker", detail: "ระยะ Mana Cost สกิล Defense Matrix เพิ่มขึ้น 15 Mana, Rearm ใช้เวลาหมุนเพิ่มขึ้น 0.15 วินาที" },
+        { hero: "Nature's Prophet", detail: "ดาเมจจาก Sprout ลดลง 10, คูลดาวน์ Teleportation เลเวล 1 เพิ่มขึ้น +5 วินาที" },
+        { hero: "Pangolier", detail: "ระยะเวลา Stun ของ Rolling Thunder ลดลง 0.1 วินาที, Swashbuckle ดาเมจลดลง 5 ต่อครั้ง" }
+    ],
+    items: [
+        { name: "Solar Crest", detail: "ราคาใบสั่งซื้อเพิ่มขึ้น +150 Gold, บัฟเกราะลดลงเหลือ +6 (เดิม +7)" },
+        { name: "Mage Slayer", detail: "ลดดาเมจเวทลงเหลือ 35% (เดิม 40%), ดาเมจต่อวินาทีเพิ่มขึ้นเป็น 25" },
+        { name: "Gleipnir", detail: "ระยะล็อคขาในพื้นที่ลดลงเหลือ 1.8 วินาที (เดิม 2.0 วินาที)" },
+        { name: "Wisdom Rune", detail: "เพิ่มโบนัส EXP พิเศษให้ทีมที่มีเลเวลต่ำสุด +15% เพื่อลดช่องว่างการเสียเปรียบ" }
+    ]
+};
+
+function initPatchNotes() {
+    const buffsContainer = document.getElementById('patchnotes-buffs-container');
+    const nerfsContainer = document.getElementById('patchnotes-nerfs-container');
+    const itemsContainer = document.getElementById('patchnotes-items-container');
+
+    if (!buffsContainer || !nerfsContainer || !itemsContainer) return;
+
+    buffsContainer.innerHTML = PATCH_NOTES_DATABASE.buffs.map(b => `
+        <div style="background:var(--bg-card-hover); border:1px solid rgba(29,209,161,0.2); padding:12px 14px; border-radius:8px; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px;">
+            <img src="${getHeroImageUrl(b.hero)}" style="width:44px; height:32px; object-fit:cover; border-radius:4px; border:1px solid #1dd1a1;">
+            <div>
+                <strong style="color:#1dd1a1; font-size:14px;">🟢 ${b.hero}</strong>
+                <p style="margin:4px 0 0; font-size:12px; color:#c0c9d8; line-height:1.5;">${b.detail}</p>
+            </div>
+        </div>
+    `).join('');
+
+    nerfsContainer.innerHTML = PATCH_NOTES_DATABASE.nerfs.map(n => `
+        <div style="background:var(--bg-card-hover); border:1px solid rgba(200,35,44,0.2); padding:12px 14px; border-radius:8px; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px;">
+            <img src="${getHeroImageUrl(n.hero)}" style="width:44px; height:32px; object-fit:cover; border-radius:4px; border:1px solid #c8232c;">
+            <div>
+                <strong style="color:#ff6b6b; font-size:14px;">🔴 ${n.hero}</strong>
+                <p style="margin:4px 0 0; font-size:12px; color:#c0c9d8; line-height:1.5;">${n.detail}</p>
+            </div>
+        </div>
+    `).join('');
+
+    itemsContainer.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
+            ${PATCH_NOTES_DATABASE.items.map(i => {
+                const imgUrl = getIconForItemName(i.name, cachedItemConstants);
+                return `
+                    <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:12px 14px; border-radius:8px; display:flex; align-items:flex-start; gap:12px;">
+                        ${imgUrl ? `<img src="${imgUrl}" style="width:36px; height:36px; border-radius:6px; object-fit:cover; border:1px solid #d4af37;">` : `<i class="fa-solid fa-cube gold-text" style="font-size:24px;"></i>`}
+                        <div>
+                            <strong style="color:#d4af37; font-size:13px;">💎 ${i.name}</strong>
+                            <p style="margin:4px 0 0; font-size:12px; color:#c0c9d8; line-height:1.5;">${i.detail}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+async function syncLiveMetaFromApi() {
+    const syncBtn = document.getElementById('btn-sync-live-meta');
+    if (syncBtn) {
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังเชื่อมต่อ OpenDota Live Meta...`;
+    }
+
+    try {
+        const response = await fetch('https://api.opendota.com/api/heroStats');
+        if (!response.ok) throw new Error('API fetch failed');
+        
+        const heroStats = await response.json();
+        
+        heroStats.forEach(h => {
+            const heroName = h.localized_name;
+            const proPick = h.pro_pick || 0;
+            const proWin = h.pro_win || 0;
+            const pubPick = (h['8_pick'] || 0) + (h['7_pick'] || 0) + (h['6_pick'] || 0);
+            const pubWin = (h['8_win'] || 0) + (h['7_win'] || 0) + (h['6_win'] || 0);
+
+            const totalPick = proPick + pubPick;
+            const totalWin = proWin + pubWin;
+
+            if (heroName && totalPick > 50) {
+                const wr = ((totalWin / totalPick) * 100).toFixed(1);
+                for (const role in PATCH_TIERLIST_DATABASE) {
+                    for (const tier in PATCH_TIERLIST_DATABASE[role]) {
+                        PATCH_TIERLIST_DATABASE[role][tier].forEach(item => {
+                            if (item.name.toLowerCase() === heroName.toLowerCase()) {
+                                item.winrate = `${wr}%`;
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        alert('✅ อัปเดตสถิติ Winrate และอันดับเมต้าจาก OpenDota Live API เรียบร้อยแล้ว!');
+        const activeRoleBtn = document.querySelector('#tierlist-role-group button.active');
+        const role = activeRoleBtn ? activeRoleBtn.getAttribute('data-tier-role') : 'Pos 1 (Carry)';
+        const tierlistNav = document.querySelector('.nav-item[data-tab="tierlist"]');
+        if (tierlistNav) tierlistNav.click();
+
+    } catch (e) {
+        console.error(e);
+        alert('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ API อัปเดตเมต้าสด ระบบจะใช้อันดับตามแพตช์ 7.41e สำรอง');
+    } finally {
+        if (syncBtn) {
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = `<i class="fa-solid fa-rotate"></i> 🔄 อัปเดตเมต้า & Winrate สดอัตโนมัติ`;
+        }
+    }
+}
+
 function initPatchTierList() {
     const roleBtns = document.querySelectorAll('#tierlist-role-group button');
     const container = document.getElementById('tierlist-content-container');
+    const liveSyncBtn = document.getElementById('btn-sync-live-meta');
+
+    if (liveSyncBtn) {
+        liveSyncBtn.addEventListener('click', syncLiveMetaFromApi);
+    }
 
     if (!container) return;
 
@@ -3232,5 +3366,138 @@ function initRankGuide() {
 
     renderSelectorButtons();
     renderRankDetails(selectedRank);
+}
+
+// ============================================================
+// PRO PLAYER SETTINGS & HOTKEY OPTIMIZATION GUIDE
+// ============================================================
+function initProSettingsGuide() {
+    const btn = document.getElementById('btn-open-settings-guide');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            showProSettingsModal();
+        });
+    }
+}
+
+function showProSettingsModal() {
+    const existing = document.getElementById('pro-settings-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'pro-settings-modal';
+    modal.className = 'modal-overlay';
+    modal.style.zIndex = '3200';
+
+    modal.innerHTML = `
+        <div class="modal-content card" style="max-width:820px; max-height:90vh; overflow-y:auto; border:2px solid var(--cyan);">
+            <div class="card-header" style="background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center;">
+                <div>
+                    <h2 style="margin:0; font-size:22px;"><i class="fa-solid fa-gamepad cyan-text"></i> Pro Player In-Game Settings & Hotkey Optimization Guide</h2>
+                    <p class="subtitle" style="margin-top:2px;">คู่มือตั้งค่าตัวเลือกและปุ่มกดในเกม Dota 2 ที่ Pro Player แร้งก์ท็อปใช้เพื่อกดสกิลเร็วขึ้น 0.3 วินาที</p>
+                </div>
+                <button class="btn-close" id="btn-close-pro-settings">&times;</button>
+            </div>
+            <div class="card-body" style="padding:24px;">
+
+                <div class="grid-layout mb-20" style="grid-template-columns: 1fr 1fr; gap:16px;">
+                    <!-- 1. Quick Cast -->
+                    <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:16px; border-radius:8px; border-top:3px solid #00d2d3;">
+                        <h4 style="margin-top:0; color:#00d2d3;"><i class="fa-solid fa-bolt"></i> 1. การตั้งค่า Quick Cast (กดสกิลไว 0.3 วิ)</h4>
+                        <p style="font-size:12px; color:#c0c9d8; line-height:1.5;">
+                            ปกติกดสกิลต้องคลิกเลือกเป้าหมาย 2 ครั้ง (กดปุ่มสกิล ➔ คลิกเมาส์) แต่ถ้าเปิด <strong>Quick Cast On Key Down</strong> สกิลจะพุ่งใส่ตำแหน่งเมาส์ทันทีใน 1 เฟรม!
+                        </p>
+                        <div style="font-size:11px; background:rgba(0,0,0,0.3); padding:8px; border-radius:5px; color:#8e95a5;">
+                            ⚙️ <strong>วิธีตั้งค่าในเกม:</strong> SETTINGS ➔ HOTKEYS ➔ ติ๊ก <code>Enable Quickcast</code> ➔ ตั้งค่าปุ่มสกิล Q/W/E/R เป็น Quickcast
+                        </div>
+                    </div>
+
+                    <!-- 2. Smart Double Tap Self Cast -->
+                    <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:16px; border-radius:8px; border-top:3px solid #ff9f43;">
+                        <h4 style="margin-top:0; color:#ff9f43;"><i class="fa-solid fa-hand-holding-hand"></i> 2. Smart Double-Tap Self Cast</h4>
+                        <p style="font-size:12px; color:#c0c9d8; line-height:1.5;">
+                            ช่วยให้ร่ายสกิลหรือไอเทมใส่ตัวเองได้ทันทีใน 0.1 วินาที โดยไม่ต้องเลื่อนเมาส์กลับมาที่ตัวฮีโร่ (เช่น Force Staff ผลักตัวเอง, Eul's ลอยตัวเอง, Salve ฮีลตัวเอง)
+                        </p>
+                        <div style="font-size:11px; background:rgba(0,0,0,0.3); padding:8px; border-radius:5px; color:#8e95a5;">
+                            ⚙️ <strong>วิธีตั้งค่าในเกม:</strong> SETTINGS ➔ OPTIONS ➔ ติ๊ก <code>Smart Double-Tap</code> (กด Alt + ปุ่มไอเทม)
+                        </div>
+                    </div>
+
+                    <!-- 3. Minimap Size & High Contrast -->
+                    <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:16px; border-radius:8px; border-top:3px solid #1dd1a1;">
+                        <h4 style="margin-top:0; color:#1dd1a1;"><i class="fa-solid fa-map-location-dot"></i> 3. Minimap Size +130% & Icons</h4>
+                        <p style="font-size:12px; color:#c0c9d8; line-height:1.5;">
+                            ขยายขนาดไอคอนบนมินิแมพให้ใหญ่ขึ้น 130% และเปลี่ยนจุดสีเป็นรูปไอคอนหน้าฮีโร่ ช่วยให้อ่านแมพและมองเห็นศัตรูเดินแก๊งได้ง่ายขึ้น 2 เท่า!
+                        </p>
+                        <div style="font-size:11px; background:rgba(0,0,0,0.3); padding:8px; border-radius:5px; color:#8e95a5;">
+                            ⚙️ <strong>วิธีตั้งค่าในเกม:</strong> SETTINGS ➔ OPTIONS ➔ Minimap Icon Size = <code>130%</code> และเปลี่ยนเป็น <code>Hero Icons</code>
+                        </div>
+                    </div>
+
+                    <!-- 4. Camera Speed & Select Hero -->
+                    <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:16px; border-radius:8px; border-top:3px solid #c3a1ff;">
+                        <h4 style="margin-top:0; color:#c3a1ff;"><i class="fa-solid fa-camera"></i> 4. Camera Speed & Spacebar Center</h4>
+                        <p style="font-size:12px; color:#c0c9d8; line-height:1.5;">
+                            ตั้งค่าความเร็วกล้องเลื่อนแมพ (5000-6000) ไม่ให้ไหลหนืด และตั้งค่าปุ่ม Spacebar ให้ดึงมุมกล้องกลับมาศูนย์กลางตัวฮีโร่ทันทีเมื่อกด
+                        </p>
+                        <div style="font-size:11px; background:rgba(0,0,0,0.3); padding:8px; border-radius:5px; color:#8e95a5;">
+                            ⚙️ <strong>วิธีตั้งค่าในเกม:</strong> SETTINGS ➔ HOTKEYS ➔ Select Hero = <code>Spacebar</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Checklist & XP Reward -->
+                <div style="background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.3); padding:18px; border-radius:10px;">
+                    <h4 style="margin:0 0 10px; color:#d4af37;"><i class="fa-solid fa-square-check"></i> เช็คลิสต์ปรับการตั้งค่าในเกมเพื่อรับ +50 XP โบนัส:</h4>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;" id="pro-settings-checklist-group">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" class="pro-setting-chk">
+                            <span>เปิดใช้งาน <strong>Quick Cast</strong> สำหรับสกิลหลักในเกมเรียบร้อยแล้ว</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" class="pro-setting-chk">
+                            <span>ปรับขนาดมินิแมพเป็น <strong>130%</strong> และแสดงรูปหน้าฮีโร่เรียบร้อยแล้ว</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" class="pro-setting-chk">
+                            <span>ตั้งค่าปุ่ม <strong>Spacebar</strong> เพื่อดึงมุมกล้องกลับหาฮีโร่เรียบร้อยแล้ว</span>
+                        </label>
+                    </div>
+                    <div style="margin-top:14px; text-align:right;">
+                        <button class="btn btn-primary" id="btn-claim-settings-xp" disabled style="opacity:0.5;"><i class="fa-solid fa-gift"></i> รับโบนัส +50 XP โค้ช</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = document.getElementById('btn-close-pro-settings');
+    const claimBtn = document.getElementById('btn-claim-settings-xp');
+    const checkboxes = modal.querySelectorAll('.pro-setting-chk');
+
+    const updateClaimState = () => {
+        const allChecked = Array.from(checkboxes).every(c => c.checked);
+        if (claimBtn) {
+            claimBtn.disabled = !allChecked;
+            claimBtn.style.opacity = allChecked ? '1' : '0.5';
+        }
+    };
+
+    checkboxes.forEach(c => c.addEventListener('change', updateClaimState));
+
+    claimBtn?.addEventListener('click', () => {
+        StorageManager.gainXp(50);
+        alert('🎉 ยอดเยี่ยมมาก! รับโบนัส +50 XP จากการปรับตั้งค่าเกมสไตล์ Pro Player เรียบร้อยแล้ว!');
+        modal.remove();
+        renderDashboard();
+    });
+
+    closeBtn?.addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
 }
 

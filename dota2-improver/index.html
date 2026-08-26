@@ -48,6 +48,9 @@
                 <button class="nav-item" data-tab="rankguide">
                     <i class="fa-solid fa-road gold-text"></i> Rank Roadmap
                 </button>
+                <button class="nav-item" data-tab="patchnotes">
+                    <i class="fa-solid fa-scroll cyan-text"></i> Patch Notes & Meta
+                </button>
             </nav>
 
             <!-- Gamification XP Bar in Sidebar -->
@@ -308,6 +311,19 @@
                         <p class="subtitle">หน้าที่หลักและวิธีการพัฒนาฝีมือตามตำแหน่งการเล่น (Positions 1-5)</p>
                     </div>
                 </header>
+
+                <!-- Pro Game Settings & Hotkey Optimization Banner/Card -->
+                <div class="card mb-20" style="border-left: 4px solid var(--cyan); background: linear-gradient(135deg, rgba(0,210,255,0.08), rgba(15,16,21,0.95));">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h3 style="margin:0;"><i class="fa-solid fa-gamepad cyan-text"></i> Pro Player In-Game Settings & Hotkey Guide</h3>
+                            <p class="subtitle" style="margin-top:2px;">การตั้งค่าปุ่มและตัวเลือกในเกม Dota 2 ที่ Pro Player ใช้เพื่อกดสกิลเร็วขึ้น 0.3 วินาที</p>
+                        </div>
+                        <button class="btn btn-small btn-primary" id="btn-open-settings-guide" style="background: linear-gradient(135deg, #00d2d3, #2e86de); border:none; font-weight:700;">
+                            <i class="fa-solid fa-sliders"></i> ดูวิธีตั้งค่าปุ่มในเกม (Pro Settings)
+                        </button>
+                    </div>
+                </div>
 
                 <div class="role-selector-bar">
                     <button class="role-tab-btn active" data-role="pos1">Pos 1 (Carry)</button>
@@ -681,11 +697,14 @@
 
             <!-- Tab: Patch Tier List (Patch 7.41e Meta) -->
             <section id="tierlist" class="tab-content">
-                <header class="content-header">
+                <header class="content-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <div>
-                        <h1>Dota 2 Meta Tier List (Patch 7.41e)</h1>
-                        <p class="subtitle">ตารางอันดับฮีโร่ที่ได้เปรียบสูงสุดใน High MMR Ranked แนะนำให้เลือกซ้อม S-Tier และ A-Tier เพื่อการไต่แร้งก์ที่รวดเร็ว</p>
+                        <h1>Dota 2 Meta Tier List (Live OpenDota Winrate Sync)</h1>
+                        <p class="subtitle">ตารางอันดับฮีโร่ที่ได้เปรียบสูงสุดใน High MMR Ranked อัปเดตอัตโนมัติตามสถิติ Winrate ล่าสุด</p>
                     </div>
+                    <button class="btn btn-small btn-primary" id="btn-sync-live-meta" style="background: linear-gradient(135deg, #d4af37, #e67e22); border:none; font-weight:700;">
+                        <i class="fa-solid fa-rotate"></i> 🔄 อัปเดตเมต้า & Winrate สดอัตโนมัติ
+                    </button>
                 </header>
 
                 <div class="card mb-20">
@@ -730,6 +749,50 @@
 
                 <div id="rankguide-content-container">
                     <!-- Dynamic Rank Details injected by JS -->
+                </div>
+            </section>
+
+            <!-- Tab: Patch Notes & Meta Breakdown (Buffs / Nerfs Zone) -->
+            <section id="patchnotes" class="tab-content">
+                <header class="content-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h1>Dota 2 Patch Notes & Meta Changelog (แปลไทย 100%)</h1>
+                        <p class="subtitle">สรุปการอัปเดตแพตช์ล่าสุด แบ่งโซน 🟢 BUFFS (ปรับเพิ่มความเก่ง) และ 🔴 NERFS (ปรับลดความเก่ง) ชัดเจนอ่านง่าย</p>
+                    </div>
+                    <span class="badge badge-gold" style="font-size:13px; padding:6px 14px;"><i class="fa-solid fa-code-branch"></i> Live Patch 7.41e</span>
+                </header>
+
+                <!-- Buffs vs Nerfs Split Grid -->
+                <div class="grid-layout mb-20" style="grid-template-columns: 1fr 1fr; gap:16px;">
+                    <!-- 🟢 BUFFS ZONE -->
+                    <div class="card" style="border-top: 4px solid var(--green); background: linear-gradient(135deg, rgba(29,209,161,0.06), rgba(15,16,21,0.95));">
+                        <div class="card-header" style="border-bottom: 1px solid rgba(29,209,161,0.2);">
+                            <h3 class="green-text" style="margin:0;"><i class="fa-solid fa-arrow-trend-up"></i> 🟢 BUFFS ZONE (ปรับเพิ่มความเก่ง / บัฟแรงประจำแพตช์)</h3>
+                        </div>
+                        <div class="card-body" style="padding:18px;" id="patchnotes-buffs-container">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- 🔴 NERFS ZONE -->
+                    <div class="card" style="border-top: 4px solid var(--crimson); background: linear-gradient(135deg, rgba(200,35,44,0.06), rgba(15,16,21,0.95));">
+                        <div class="card-header" style="border-bottom: 1px solid rgba(200,35,44,0.2);">
+                            <h3 class="crimson-text" style="margin:0;"><i class="fa-solid fa-arrow-trend-down"></i> 🔴 NERFS ZONE (ปรับลดความเก่ง / เนิร์ฟโดนปรับลง)</h3>
+                        </div>
+                        <div class="card-body" style="padding:18px;" id="patchnotes-nerfs-container">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gameplay & Items Changes Zone -->
+                <div class="card mb-20" style="border-top: 4px solid var(--gold);">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-shield-cat gold-text"></i> 💎 ITEMS & SYSTEM CHANGES (ปรับเปลี่ยนไอเทมและระบบแมพ)</h3>
+                    </div>
+                    <div class="card-body" style="padding:18px;" id="patchnotes-items-container">
+                        <!-- Injected by JS -->
+                    </div>
                 </div>
             </section>
 
