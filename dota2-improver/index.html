@@ -705,6 +705,34 @@
                 </div>
             </section>
 
+            <!-- Tab: Rank Roadmap & Guide -->
+            <section id="rankguide" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h1>Dota 2 Rank Roadmap & MMR Mastery Guide</h1>
+                        <p class="subtitle">คู่มือเจาะลึกทักษะ ความเข้าใจเกม และวิธีไต่แร้งก์ในแต่ละระดับตั้งแต่ Herald ถึง Immortal</p>
+                    </div>
+                </header>
+
+                <!-- Current Rank Status Card -->
+                <div class="card mb-20" style="border: 2px solid #d4af37; background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(15,16,21,0.9));">
+                    <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                        <div>
+                            <span style="font-size:12px; color:#8e95a5; font-weight:600;">แร้งก์ปัจจุบันของคุณ:</span>
+                            <h2 style="margin:4px 0 0; color:#d4af37;" id="rankguide-current-tier">Archon 👑</h2>
+                            <p style="margin:4px 0 0; font-size:13px; color:#c0c9d8;" id="rankguide-current-desc">เป้าหมายต่อไป: พัฒนาการคุมเลน และการอ่านมินิแมพเพื่อขึ้น Legend</p>
+                        </div>
+                        <div class="btn-group" id="rankguide-tier-selector" style="flex-wrap:wrap; gap:6px;">
+                            <!-- Tier selector buttons injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rankguide-content-container">
+                    <!-- Dynamic Rank Details injected by JS -->
+                </div>
+            </section>
+
             <!-- Tab: Settings -->
             <section id="settings" class="tab-content">
                 <header class="content-header" style="display:flex; justify-content:space-between; align-items:center;">

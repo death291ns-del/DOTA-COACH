@@ -621,6 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAllHeroesExplorer();
     initPatchTierList();
     initCoffeeModal();
+    initRankGuide();
     
     fetchHeroList();
     
@@ -2840,5 +2841,253 @@ function initCoffeeModal() {
             if (e.target === modal) modal.classList.add('hidden-form');
         });
     }
+}
+
+// ============================================================
+// RANK ROADMAP & MMR MASTERY DATABASE
+// ============================================================
+const RANK_ROADMAP_DATABASE = {
+    "Herald": {
+        name: "Herald (0 - 760 MMR)",
+        badge: "🟤 Herald",
+        goal: "ฝึกฝนการควบคุมยูนิตและ Last Hit ครีปพื้นฐาน ไม่แจกฟรี และเลือกฮีโร่ใกล้มือ 1-2 ตัว",
+        skills: [
+            "ฝึกเก็บ Last Hit ให้ได้มากกว่า 40 ตัวใน 10 นาทีแรก",
+            "ใช้สกิลและโจมตีครีปฝั่งศัตรูให้แม่นยำ ไม่ยืนนิ่งกลางเลน",
+            "ห้ามเดินเที่ยวป่าคนเดียวโดยไม่มีครีปดันเลน"
+        ],
+        traps: [
+            "สุ่มเลือกฮีโร่ตัวใหม่ที่ไม่เคยเล่นทุกตา",
+            "วิ่งไปบวกกับศัตรูใต้ป้อมโดยไม่มีครีปฝั่งเราสนับสนุน",
+            "ไม่ยอมซื้อของเพิ่มเลือด (Tango/Healing Salve) คืนเลน"
+        ],
+        heroes: ["Sven", "Viper", "Sniper", "Crystal Maiden", "Wraith King"],
+        mindset: "โฟกัสที่การเก็บบอร์ดเงินและการไม่ตาย เลนชนะง่ายๆ ด้วยการเก็บ Last Hit มากกว่าศัตรู"
+    },
+    "Guardian": {
+        name: "Guardian (770 - 1,530 MMR)",
+        badge: "⚪ Guardian",
+        goal: "เข้าใจหน้าที่ของสายอาชีพ (Positions 1-5) และรู้จักเวลาเกิดของรูนและบอสในแผนที่",
+        skills: [
+            "ซัพพอร์ต: ซื้อ Observer Ward และ Sentry Ward ปักคุมพื้นที่เลนและถ้ำ Roshan",
+            "คอร์/แครี่: สลับไปฟาร์มป่าใกล้ๆ เมื่อเลนอันตราย ดันเลนเซฟเพื่อสร้างพื้นที่",
+            "เช็คไอเทมของศัตรูในเลนเสมอ (กดดูว่ามี Wand หรือ Blink หรือไม่)"
+        ],
+        traps: [
+            "แช่ฟาร์มป่าลึกคนเดียวขณะที่ทีมกำลังโดนดันป้อม 3",
+            "ซื้อไอเทมดาเมจบริสุทธิ์โดยไม่ซื้อ BKB กันดิสเอเบิล",
+            "ก่นด่าเพื่อนร่วมทีมเมื่อเปิดไฟต์เสียเปรียบ (Tilt)"
+        ],
+        heroes: ["Juggernaut", "Dragon Knight", "Axe", "Lion", "Witch Doctor"],
+        mindset: "การสร้างความได้เปรียบเกิดจากการคุมพื้นที่ป้อมและรูน ไม่ใช่การเดินไล่คิลคนเดียว"
+    },
+    "Crusader": {
+        name: "Crusader (1,540 - 2,300 MMR)",
+        badge: "🟤 Crusader",
+        goal: "การอ่านมินิแมพ (Map Awareness) และการออกไอเทมแก้ทาง (Counter Items)",
+        skills: [
+            "กวาดสายตามองมินิแมพทุกๆ 5 วินาทีเมื่อครีปชนกัน",
+            "ออกไอเทมแก้ทางทันเวลา: Spirit Vessel (vs Regen), BKB (vs Stun), MKB (vs Evasion)",
+            "ซัพพอร์ต: เดินแก๊งช่วยเหลือเลนกลางและดึงรูน Wisdom ตอนนาที 7:00/14:00"
+        ],
+        traps: [
+            "ออกไอเทมตามบิลด์เดิมเหมือนกันทุกเกมโดยไม่ดูฮีโร่ศัตรู",
+            "ไม่ยอมพกวาร์ด/ทาวเวอร์วาร์ดเข้าปะทะกับฮีโร่ล่องหน (Riki/Bounty/Shadow Blade)",
+            "ไฟต์ชนะแล้ววิ่งกลับไปฟาร์มป่าแทนที่จะขึ้นดันป้อมหรือตี Roshan"
+        ],
+        heroes: ["Phantom Assassin", "Shadow Fiend", "Slardar", "Hoodwink", "Jakiro"],
+        mindset: "ชัยชนะในระดับ Crusader เกิดจากการคุมมินิแมพและการปิดเกมเมื่อชนะไฟต์"
+    },
+    "Archon": {
+        name: "Archon (2,310 - 3,070 MMR)",
+        badge: "👑 Archon",
+        goal: "การคุมจังหวะไฟต์ (Fight Positioning) และการดึงแผนที่ (Split Push & Space Creation)",
+        skills: [
+            "ยืนตำแหน่งให้ปลอดภัย: แครี่/มิดรอตัว Stun ศัตรูเปิดก่อนค่อยเข้าตาม",
+            "การคุม Dead Lane: รู้ว่าเลนไหนอันตราย ห้ามเดินไปตายฟรี",
+            "การบริหารเงิน Buyback: เก็บเงินสำรองซื้อเกิดไว้เสมอในนาทีที่ 30+"
+        ],
+        traps: [
+            "วิ่งไปไฟต์ตามเพื่อนในจุดที่ไม่มีวิชั่นและไม่มีป้อมสนับสนุน (Bad Fights)",
+            "ตายฟรีช่วงเลทเกมเพราะไม่มีเงิน Buyback",
+            "ใช้สกิลใหญ่/อัลติเมตใส่ตัวแทงค์ฝั่งศัตรูแทนที่จะเก็บไว้ใส่ตัวคีย์หลัก"
+        ],
+        heroes: ["Invoker", "Anti-Mage", "Centaur Warrunner", "Rubick", "Bane"],
+        mindset: "เล่นตามจังหวะวิชั่นและคุมบอร์ดเกม ห้ามเข้าปะทะหากไม่เห็นตัวคีย์หลักของศัตรูบนแมพ"
+    },
+    "Legend": {
+        name: "Legend (3,080 - 3,840 MMR)",
+        badge: "💎 Legend",
+        goal: "การอ่านเกมล่วงหน้า (Draft Synergies & Smoke Gank Execution)",
+        skills: [
+            "กดใช้ Smoke of Deceit สื่อสารทีมเดินแก๊งคิลตัวคีย์ศัตรูก่อนเวลา Roshan/Tormentor",
+            "เลือกฮีโร่ที่มี Synergy กับเพื่อนและกดดันจังหวะคุมเลนใน Pick Phase",
+            "การสลับเลนและคุมไฟต์รอบถ้ำ Roshan เพื่อเอา Aegis ขึ้น High Ground"
+        ],
+        traps: [
+            "ปล่อยให้ศัตรูได้ Aegis ฟรีโดยไม่พยายามปักวิชั่นหรือรบกวน",
+            "ขึ้นดัน High Ground โดยไม่มีครีปดันลึกหรือไม่มีตัวเปิด",
+            "สื่อสารเชิงลบจนทีมเสียสมาธิในการเล่น"
+        ],
+        heroes: ["Morphling", "Storm Spirit", "Doom", "Puck", "Oracle"],
+        mindset: "การตัดสินใจในระดับ Legend ต้องเกิดจากการคาดการณ์ล่วงหน้า 1-2 นาที"
+    },
+    "Ancient": {
+        name: "Ancient (3,850 - 4,610 MMR)",
+        badge: "🛡️ Ancient",
+        goal: "การคุมทรัพยากรระดับสูง (Wave Management & Power Spikes)",
+        skills: [
+            "เดินเกมตาม Power Spike ของไอเทมหลัก (เช่น ได้ BKB/Blink ปุ๊บ ต้องเดินไฟต์ทันที)",
+            "การดึงจังหวะ Creep Equilibrium และการบล็อกป่าศัตรูด้วย Sentry",
+            "การคํานวณ Buyback สวนกลับเมื่อศัตรูบุกขึ้นบ้าน"
+        ],
+        traps: [
+            "ฟาร์มเพลินหลังได้ Item Power Spike จนเสียโอกาสเดินเกม",
+            "ไม่ยอมสื่อสารแผนการเล่นให้เพื่อนร่วมทีมทราบก่อนเริ่มปะทะ"
+        ],
+        heroes: ["Templar Assassin", "Ember Spirit", "Beastmaster", "Chen", "Grimstroke"],
+        mindset: "ใช้ประโยชน์จาก Power Spike และวิชั่นเพื่อบังคับให้ศัตรูต้องเล่นในพื้นที่เสียเปรียบ"
+    },
+    "Divine": {
+        name: "Divine (4,620 - 5,419 MMR)",
+        badge: "⚔️ Divine",
+        goal: "การเล่นแบบไร้ข้อผิดพลาด (Minimizing Execution Errors & Macro Control)",
+        skills: [
+            "การอ่านการเดินของมิดเลนและซัพพอร์ตศัตรูจากลักษณะการดันเลน",
+            "การหลบสกิลและการใช้สกิลขัดจังหวะด้วยเฟรมปฏิกิริยารวดเร็ว",
+            "การควบคุมแมพ 100% จนศัตรูติดอยู่แต่ในบ้าน"
+        ],
+        traps: [
+            "ประมาทศัตรูช่วงเลทเกมจนโดนสวนกลับ (Throwing High Ground Advantage)",
+            "ไม่ปรับแผนเมื่อโดนแก้ทางไอเทม"
+        ],
+        heroes: ["Meepo", "Tinker", "Lone Druid", "Batrider", "Earth Spirit"],
+        mindset: "รักษาระดับสมาธิและความต่อเนื่อง ไร้ข้อผิดพลาดในการกดปุ่มและอ่านแผนที่"
+    },
+    "Immortal": {
+        name: "Immortal (5,420+ MMR)",
+        badge: "🌟 Immortal Top Leaderboard",
+        goal: "การเป็นผู้นำทีม อ่านแมตช์การแข่งขันระดับมืออาชีพ และปรับตัวตามแพตช์ทันที",
+        skills: [
+            "การเป็น Shotcaller สั่งการยึดพื้นที่และกำหนดจุดไฟต์ให้ทีม 5 คน",
+            "ความเข้าใจลึกซึ้งในระบบเกราะ ดาเมจ และการกระจายดาเมจระดับท็อป",
+            "ความคงเส้นคงวาและสภาวะอารมณ์ไร้ขีดจำกัด (Peak Mental Strength)"
+        ],
+        traps: [
+            "ยึดติดกับความคิดตัวเองโดยไม่รับฟังคอลของเพื่อนร่วมทีม"
+        ],
+        heroes: ["Pangolier", "Spirit Breaker", "Nature's Prophet", "Kez", "Tusk"],
+        mindset: "ท็อปของตารางตักตวงทุกความผิดพลาดของศัตรูมาเปลี่ยนเป็นชัยชนะ"
+    }
+};
+
+function initRankGuide() {
+    const selectorContainer = document.getElementById('rankguide-tier-selector');
+    const contentContainer = document.getElementById('rankguide-content-container');
+    const currentTierHeader = document.getElementById('rankguide-current-tier');
+    const currentDescHeader = document.getElementById('rankguide-current-desc');
+
+    if (!selectorContainer || !contentContainer) return;
+
+    const mmrData = StorageManager.getMmrData();
+    const currentMmr = mmrData.currentMmr || 2200;
+    const currentRankInfo = StorageManager.getRankTierInfo(currentMmr);
+
+    if (currentTierHeader) currentTierHeader.textContent = `${currentRankInfo.tier} (${currentMmr.toLocaleString()} MMR)`;
+    if (currentDescHeader) currentDescHeader.textContent = `เป้าหมายถัดไป: ${currentRankInfo.nextRank}`;
+
+    const ranks = Object.keys(RANK_ROADMAP_DATABASE);
+    let selectedRank = currentRankInfo.tier.split(' ')[0]; // e.g. "Archon"
+    if (!RANK_ROADMAP_DATABASE[selectedRank]) selectedRank = "Archon";
+
+    const renderSelectorButtons = () => {
+        selectorContainer.innerHTML = '';
+        ranks.forEach(r => {
+            const data = RANK_ROADMAP_DATABASE[r];
+            const btn = document.createElement('button');
+            const isCurrent = r === selectedRank;
+            btn.className = `btn btn-small ${isCurrent ? 'btn-primary' : 'btn-secondary'}`;
+            btn.style.fontWeight = '600';
+            btn.innerHTML = `${data.badge}`;
+            btn.addEventListener('click', () => {
+                selectedRank = r;
+                renderSelectorButtons();
+                renderRankDetails(r);
+            });
+            selectorContainer.appendChild(btn);
+        });
+    };
+
+    const renderRankDetails = (rankKey) => {
+        const data = RANK_ROADMAP_DATABASE[rankKey];
+        if (!data) return;
+
+        contentContainer.innerHTML = `
+            <div class="grid-layout mb-20">
+                <div class="card card-span-2">
+                    <div class="card-header" style="background:rgba(212,175,55,0.08); border-bottom:1px solid rgba(212,175,55,0.2);">
+                        <h3><i class="fa-solid fa-bullseye gold-text"></i> ${data.name} — เป้าหมายและทักษะที่ต้อง Master</h3>
+                    </div>
+                    <div class="card-body" style="padding:20px;">
+                        <div style="background:rgba(0,210,255,0.06); border-left:3px solid var(--cyan); padding:12px 16px; border-radius:6px; margin-bottom:16px;">
+                            <strong class="cyan-text"><i class="fa-solid fa-flag"></i> เป้าหมายหลักในการผ่านแร้งก์นี้:</strong>
+                            <p style="margin:4px 0 0; color:#fff; font-size:14px;">${data.goal}</p>
+                        </div>
+
+                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-check-double green-text"></i> 3 ทักษะที่ต้องฝึกฝนให้เชี่ยวชาญ:</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+                            ${data.skills.map(s => `
+                                <div style="background:var(--bg-card-hover); padding:10px 14px; border-radius:6px; border:1px solid var(--border-color); font-size:13px; display:flex; align-items:center; gap:10px;">
+                                    <i class="fa-solid fa-circle-check green-text"></i>
+                                    <span>${s}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation crimson-text"></i> ข้อผิดพลาดคลาสสิกที่ทำให้ติดหล่ม:</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${data.traps.map(t => `
+                                <div style="background:rgba(200,35,44,0.06); padding:10px 14px; border-radius:6px; border-left:2px solid var(--crimson); font-size:13px; display:flex; align-items:center; gap:10px;">
+                                    <i class="fa-solid fa-xmark crimson-text"></i>
+                                    <span>${t}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-crown gold-text"></i> ฮีโร่พาไต่แร้งก์ ${rankKey}</h3>
+                    </div>
+                    <div class="card-body" style="padding:18px;">
+                        <p style="font-size:12px; color:#8e95a5; margin-top:0; margin-bottom:12px;">ฮีโร่ที่มีสถิติชนะสูงสุดและเล่นง่ายในแร้งก์นี้:</p>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+                            ${data.heroes.map(h => `
+                                <button class="btn btn-small btn-secondary btn-view-build" data-hero="${h}" style="border-color:rgba(212,175,55,0.4); color:#d4af37;">
+                                    <i class="fa-solid fa-scroll"></i> ${h}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:14px; border-radius:8px;">
+                            <strong style="color:#d4af37; font-size:13px;"><i class="fa-solid fa-brain"></i> Mindset ประจำแร้งก์:</strong>
+                            <p style="margin:6px 0 0; font-size:12px; color:#c0c9d8; line-height:1.5;">${data.mindset}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        contentContainer.querySelectorAll('.btn-view-build').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const heroName = btn.getAttribute('data-hero');
+                showHeroBuildModal(heroName);
+            });
+        });
+    };
+
+    renderSelectorButtons();
+    renderRankDetails(selectedRank);
 }
 
