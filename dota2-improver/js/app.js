@@ -1068,6 +1068,141 @@ async function fetchCoachAnalysis(steamId) {
     }
 }
 
+function calculateMatchGrade(m, isWin) {
+    const kills = m.kills || 0;
+    const deaths = m.deaths || 0;
+    const assists = m.assists || 0;
+    const kdaRatio = (kills + assists) / Math.max(1, deaths);
+    
+    let score = 50; // Base score
+    if (isWin) score += 20;
+    score += Math.min(25, Math.round(kdaRatio * 5));
+    if (deaths <= 2) score += 10;
+    if (deaths >= 8) score -= 15;
+    
+    score = Math.min(100, Math.max(25, score));
+
+    let grade = 'B';
+    let badgeStyle = 'background: rgba(46,134,222,0.2); border: 1px solid #2e86de; color: #54a0ff; font-weight:700;';
+    let title = 'Good Performance';
+
+    if (score >= 88 || (kdaRatio >= 4.5 && isWin)) {
+        grade = 'S+';
+        badgeStyle = 'background: linear-gradient(135deg, rgba(212,175,55,0.3), rgba(230,126,34,0.4)); border: 2px solid #ffd700; color: #ffd700; font-weight: 900; text-shadow: 0 0 6px rgba(255,215,0,0.6);';
+        title = '🏆 MVP / Outstanding Game';
+    } else if (score >= 78 || kdaRatio >= 3.2) {
+        grade = 'S';
+        badgeStyle = 'background: rgba(0,210,211,0.2); border: 1px solid #00d2d3; color: #00d2d3; font-weight: 800;';
+        title = '⭐ Excellent Game';
+    } else if (score >= 68 || kdaRatio >= 2.2) {
+        grade = 'A';
+        badgeStyle = 'background: rgba(29,209,161,0.2); border: 1px solid #1dd1a1; color: #1dd1a1; font-weight: 700;';
+        title = '👍 Solid Performance';
+    } else if (score >= 52 || kdaRatio >= 1.2) {
+        grade = 'B';
+        badgeStyle = 'background: rgba(84,160,255,0.2); border: 1px solid #54a0ff; color: #54a0ff; font-weight: 600;';
+        title = '👌 Decent Match';
+    } else {
+        grade = 'C';
+        badgeStyle = 'background: rgba(255,107,107,0.2); border: 1px solid #ff6b6b; color: #ff6b6b; font-weight: 600;';
+        title = '⚠️ Needs Improvement';
+    }
+
+    return { grade, score, badgeStyle, title, kdaRatio: kdaRatio.toFixed(2), kills, deaths, assists };
+}
+
+function showMatchReviewModal(m, heroName, isWin, gradeInfo) {
+    const existing = document.getElementById('ai-match-review-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'ai-match-review-modal';
+    modal.className = 'modal-overlay';
+    modal.style.zIndex = '3500';
+
+    const kdaRatioNum = parseFloat(gradeInfo.kdaRatio);
+    let highlights = [];
+    let areasToImprove = [];
+
+    if (gradeInfo.kills >= 8) highlights.push(`🔥 สังหารศัตรูได้สูงถึง <strong>${gradeInfo.kills} ตัว</strong> มีส่วนร่วมสร้างความเสียหายหนักในไฟต์`);
+    if (gradeInfo.deaths <= 2) highlights.push(`🛡️ ตายน้อยมากเพียง <strong>${gradeInfo.deaths} ตัว</strong> ยืนตำแหน่งได้ปลอดภัย ยอดเยี่ยมมาก!`);
+    if (kdaRatioNum >= 3.5) highlights.push(`⚡ อัตราส่วน KDA สูงถึง <strong>${gradeInfo.kdaRatio}</strong> ทำหน้าที่หลักของฮีโร่ได้อย่างสมบูรณ์แบบ`);
+    if (isWin) highlights.push(`🏆 คว้าชัยชนะแมตช์นี้มาได้สำเร็จ (+25 MMR)`);
+
+    if (highlights.length === 0) highlights.push(`👍 มีการร่วมมือกับทีมและประพฤติตนเป็นผู้เล่นที่ดีในเกม`);
+
+    if (gradeInfo.deaths >= 7) areasToImprove.push(`⚠️ เสียชีวิตมากถึง <strong>${gradeInfo.deaths} ครั้ง</strong> — ควรระวังการเดินในพื้นที่ไร้วิชั่นป่า และเช็คมินิแมพก่อนเดินออกเลน`);
+    if (gradeInfo.kills + gradeInfo.assists < 5) areasToImprove.push(`🎯 มีส่วนร่วมกับการฆ่าน้อยเกินไป — พยายามพกวาร์ดและเข้าร่วมไฟต์ใหญ่กับทีมทันทีเมื่อได้ไอเทมชิ้นแรก`);
+    if (!isWin) areasToImprove.push(`💔 แมตช์นี้แพ้ — ตรวจสอบไอเทมแก้ทางและจังหวะการดันเลนขึ้นบ้านศัตรูในเกมถัดไป`);
+
+    if (areasToImprove.length === 0) areasToImprove.push(`✨ แทบไม่มีจุดบกพร่อง รักษาสมาธิและความต่อเนื่องนี้ไว้เพื่อไต่แร้งก์ในเกมถัดไป!`);
+
+    // Award bonus XP for reviewing match
+    const xpReward = gradeInfo.grade === 'S+' ? 50 : (gradeInfo.grade === 'S' ? 35 : 20);
+    StorageManager.gainXp(xpReward);
+
+    modal.innerHTML = `
+        <div class="modal-content card" style="max-width:560px; border:2px solid ${gradeInfo.grade === 'S+' ? '#ffd700' : 'var(--border-color)'}; border-radius:12px; box-shadow: 0 0 35px rgba(0,0,0,0.8);">
+            <div class="card-header" style="background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(15,16,21,0.9)); justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; font-size:18px;"><i class="fa-solid fa-robot gold-text"></i> AI Match Performance Review</h3>
+                <button class="btn-close" id="btn-close-match-review">&times;</button>
+            </div>
+            <div class="card-body" style="padding:24px; text-align:center;">
+                <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
+                    <div style="width:85px; height:85px; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; ${gradeInfo.badgeStyle}">
+                        <span style="font-size:32px; line-height:1; font-weight:900;">${gradeInfo.grade}</span>
+                        <span style="font-size:10px; opacity:0.9;">GRADE</span>
+                    </div>
+                    <div style="text-align:left;">
+                        <span class="badge ${isWin ? 'badge-success' : 'badge-error'}" style="font-size:13px;">${isWin ? 'WIN' : 'LOSE'}</span>
+                        <h3 style="margin:4px 0 2px; color:#fff;">${heroName}</h3>
+                        <p style="margin:0; font-size:13px; color:#8e95a5;">คะแนนประสิทธิภาพ: <strong>${gradeInfo.score} / 100</strong> (${gradeInfo.title})</p>
+                        <p style="margin:2px 0 0; font-size:12px; color:#d4af37;">KDA: <strong>${gradeInfo.kills} / ${gradeInfo.deaths} / ${gradeInfo.assists}</strong> (Ratio: ${gradeInfo.kdaRatio})</p>
+                    </div>
+                </div>
+
+                <div style="text-align:left; background:rgba(0,210,255,0.06); border-left:3px solid var(--cyan); padding:12px 16px; border-radius:6px; margin-bottom:16px;">
+                    <strong class="cyan-text" style="font-size:13px;"><i class="fa-solid fa-star"></i> จุดเด่นในเกมนี้ (Highlights):</strong>
+                    <ul style="margin:6px 0 0; padding-left:18px; font-size:12px; color:#fff; line-height:1.6;">
+                        ${highlights.map(h => `<li>${h}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div style="text-align:left; background:rgba(200,35,44,0.06); border-left:3px solid var(--crimson); padding:12px 16px; border-radius:6px; margin-bottom:20px;">
+                    <strong class="crimson-text" style="font-size:13px;"><i class="fa-solid fa-bullseye"></i> คำแนะนำปรับปรุงในเกมถัดไป:</strong>
+                    <ul style="margin:6px 0 0; padding-left:18px; font-size:12px; color:#fff; line-height:1.6;">
+                        ${areasToImprove.map(a => `<li>${a}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div style="background:rgba(212,175,55,0.1); padding:10px; border-radius:6px; border:1px solid rgba(212,175,55,0.3); margin-bottom:16px; font-size:12px; color:#d4af37;">
+                    🎉 รับโบนัส <strong>+${xpReward} XP</strong> สำหรับการทบทวนการเล่นกับ AI Coach!
+                </div>
+
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <a href="https://www.dotabuff.com/matches/${m.match_id}" target="_blank" class="btn btn-secondary">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ดู Dotabuff
+                    </a>
+                    <button class="btn btn-primary" id="btn-close-review-modal-inner">ตกลง (ปิดหน้าต่าง)</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeHandler = () => {
+        modal.remove();
+        renderDashboard();
+    };
+
+    document.getElementById('btn-close-match-review')?.addEventListener('click', closeHandler);
+    document.getElementById('btn-close-review-modal-inner')?.addEventListener('click', closeHandler);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeHandler();
+    });
+}
+
 function renderApiMatches(matches) {
     const listBody = document.getElementById('api-matches-list');
     if (!matches || matches.length === 0) {
@@ -1081,7 +1216,8 @@ function renderApiMatches(matches) {
         const isWin = (m.player_slot < 128 && m.radiant_win) || (m.player_slot >= 128 && !m.radiant_win);
         const resultText = isWin ? '<span class="badge badge-success">Win</span>' : '<span class="badge badge-error">Lose</span>';
         const kda = `${m.kills} / ${m.deaths} / ${m.assists}`;
-        
+        const gradeInfo = calculateMatchGrade(m, isWin);
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
@@ -1093,9 +1229,9 @@ function renderApiMatches(matches) {
             <td>${resultText}</td>
             <td>${kda}</td>
             <td>
-                <a href="https://www.dotabuff.com/matches/${m.match_id}" target="_blank" class="btn btn-small btn-secondary">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Dotabuff
-                </a>
+                <button class="btn btn-small btn-secondary btn-review-match" style="padding:4px 10px; border-radius:15px; ${gradeInfo.badgeStyle}">
+                    <i class="fa-solid fa-robot"></i> Grade ${gradeInfo.grade}
+                </button>
             </td>
             <td>
                 <button class="btn btn-small btn-primary btn-fast-log" data-hero="${heroName}" data-result="${isWin?'win':'lose'}" data-kda="${kda}" data-matchid="${m.match_id}">
@@ -1103,6 +1239,10 @@ function renderApiMatches(matches) {
                 </button>
             </td>
         `;
+
+        tr.querySelector('.btn-review-match').addEventListener('click', () => {
+            showMatchReviewModal(m, heroName, isWin, gradeInfo);
+        });
         
         listBody.appendChild(tr);
     });
