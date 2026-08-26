@@ -2,89 +2,225 @@
 
 const ROLE_DATA = {
     pos1: {
-        title: "Position 1 - Carry (ฟาร์มและปิดสกอร์เกม)",
-        duties: [
-            "Laning: โฟกัสเก็บ Last Hit ให้ได้ 50-60 ตัวใน 10 นาทีแรก และตอดเลือดศัตรูเมื่อเข้าทำดาเมจได้",
-            "Mid-Game: หลีกเลี่ยงไฟต์สุ่มเสี่ยง เน้นลากครีปดันเลนปลอดภัย (Split push) และเข้าป่าเพื่อรักษาระดับ Gold Per Minute (GPM)",
-            "Late-Game: ยืนแนวหลังรอตำแหน่งทีมเปิดไฟต์ ใช้ดาเมจกายภาพบุกทำลายคีย์เป้าหมายและสิ่งก่อสร้างหลักเพื่อชนะเกม"
+        title: "Position 1 — Safe Lane Carry (หัวหอกฟาร์มและปิดสกอร์เกม)",
+        overview: "Pos 1 คือผู้เล่นที่รับผิดชอบการเก็บบอร์ดเงินและความเสียหายหลักของทีมในเลทเกม หัวใจสำคัญคือการบริหารเวลาอย่างมีประสิทธิภาพสูงสุด ไม่เดินเสียเวลาเปล่า และเข้าร่วมไฟต์เมื่อมี Item Power Spike พร้อมเท่านั้น",
+        phases: [
+            {
+                name: "🌅 Laning Phase (0-10 นาที): การยึดเลนและการเก็บทอง",
+                tips: [
+                    "ตั้งเป้าหมายเก็บ Last Hit ให้ได้ 55-65 ตัวขึ้นไปใน 10 นาทีแรก",
+                    "รักษาระดับ Creep Equilibrium ไม่โจมตีครีปศัตรูมั่วซั่วเพื่อให้ครีปชนกันใกล้ป้อมฝั่งเรา",
+                    "พก Tango / Salve ติดตัวเสมอ เมื่อโดนตอดเลือด ให้กดฟื้นฟูทันทีอย่าเสียดายเงิน",
+                    "หากเลนอันตรายหรือออฟเลนศัตรูเลเวล 6 ให้ย้ายไปฟาร์มป่าแคมป์ใกล้บ้านทันที"
+                ]
+            },
+            {
+                name: "⚡ Mid Game & Power Spikes (10-25 นาที): การสลับป่าและการดันเลนปลอดภัย",
+                tips: [
+                    "ออกไอเทมสปีดฟาร์มชิ้นแรกให้ไวที่สุด (Battle Fury / Maelstrom / Yasha) ภายในนาที 12-14",
+                    "ดันคลื่นครีปในเลนเซฟเข้าป้อมศัตรูก่อนสลับไปฟาร์มป่า (Push & Farm Cycle)",
+                    "หลีกเลี่ยงการเดินไปไฟต์มั่วๆ ที่ไม่มีป้อมหรือวิชั่นสนับสนุน ให้โฟกัสการฟาร์มจนได้ BKB หรือไอเทมหลักชิ้นที่สอง",
+                    "มองมินิแมพทุก 5 วินาที หากฮีโร่สายซุ่มของศัตรูหายหน้า ให้ถอยเข้าป่าลึกทันที"
+                ]
+            },
+            {
+                name: "🛡️ Late Game & Roshan (25-35 นาที): การร่วมไฟต์และการยึดพื้นที่",
+                tips: [
+                    "ร่วมไฟต์เมื่อมี Black King Bar (BKB) หรืออัลติเมตพร้อมเท่านั้น",
+                    "ยืนตำแหน่งแนวหลังไฟต์ อย่าเป็นตัวเปิดไฟต์คนแรก รอให้ Pos 3/4 เปิด Stun ก่อนค่อย Blink เข้าล้วงตัวคีย์",
+                    "หลังชนะไฟต์ ห้ามกลับไปฟาร์มป่า! ให้สั่งทีมตี Roshan หรือดันพังป้อมศัตรูทันที"
+                ]
+            },
+            {
+                name: "🏰 End Game Execution (35+ นาที): การดัน High Ground และ Buyback",
+                tips: [
+                    "เก็บเงินสำรองซื้อเกิด (Buyback) ไว้เสมอในนาทีที่ 30+ ห้ามใช้เงินหมดตัวเด็ดขาด",
+                    "ไม่บุกขึ้นบ้านศัตรู (High Ground) โดยไม่มี Aegis of the Immortal หรือครีปดันลึก 2 เลนพร้อมกัน",
+                    "โฟกัสตีป้อมหลักและตัวคีย์หลักของศัตรู อย่ายึดติดกับการวิ่งไล่คิลตัวแทงค์ถึก"
+                ]
+            }
         ],
         metrics: [
-            { name: "LH @ 10 mins", target: "55+ ครีป", desc: "เกณฑ์ระบุความสำเร็จการยืนเลนช่วงต้นเกม" },
-            { name: "Net Worth @ 20 mins", target: "11,000+ Gold", desc: "เกณฑ์ระบุทิศทางการฟาร์มระดับสากล" },
-            { name: "Average GPM", target: "650+ GPM", desc: "ตัวชี้วัดความสามารถการฟาร์มป่าและเคลียร์ครีปดัน" }
+            { name: "LH @ 10 mins", target: "60+ ครีป", desc: "เกณฑ์ระบุความสำเร็จการยืนเลนช่วงต้นเกม" },
+            { name: "Net Worth @ 20 mins", target: "11,500+ Gold", desc: "เกณฑ์ระบุทิศทางการฟาร์มระดับสากล" },
+            { name: "Average GPM", target: "680+ GPM", desc: "ตัวชี้วัดความสามารถการฟาร์มป่าและเคลียร์ครีปดัน" },
+            { name: "Tower Damage", target: "4,000+", desc: "ความเสียหายที่ทำต่อสิ่งก่อสร้างศัตรู" },
+            { name: "Buyback Availability", target: "100% เลทเกม", desc: "การมีเงินซื้อเกิดสำรองในนาทีที่ 30+" }
         ],
         traps: [
             "ยืนเลนนานเกินไปจนโดนแก๊งตายซ้ำๆ ตอนนาทีที่ 8-10 (เมื่อออฟเลนศัตรูเลเวล 6)",
             "วาปลงมาช่วยไฟต์ฝุ่นตลบที่ไม่มีนัยสำคัญจนเสียจังหวะการฟาร์มทอง",
-            "ไม่ยอมพกวาป หรือไม่ยอมดันเลนเพื่อสร้างช่องว่างการฟาร์ม (Dead Lane)"
+            "ไม่ยอมซื้อ Black King Bar (BKB) แล้วออกแต่ของดาเมจบริสุทธิ์จนโดน Stun ตายฟรี",
+            "วิ่งไปไฟต์คนเดียวในพื้นที่ไร้วิชั่นป่าศัตรู (Dead Lane)",
+            "ไม่มีเงิน Buyback ในช่วงเลทเกมทำให้ทีมแพ้ทันที"
         ]
     },
     pos2: {
-        title: "Position 2 - Midlane (คุมจังหวะและทำเกม)",
-        duties: [
-            "Laning: ชิงความได้เปรียบเลเวล 6 ยืนคุมเลนกลางและบล็อกขัดขวางการฟาร์มของคู่ต่อสู้",
-            "Mid-Game: คุมรูนแม่น้ำทุกๆ 2 นาที เดินแก๊งช่วยเหลือเลนอื่นเมื่อสุ่มได้รูนที่ได้เปรียบ (เช่น Invisibility, Haste)",
-            "Late-Game: ดึงทักษะสกิลสลับตำแหน่งสร้างจังหวะรุกรับ และปั่นป่วนแถวหลังฝ่ายตรงข้าม"
+        title: "Position 2 — Midlane (คุมจังหวะและทำเกมกลางแผนที่)",
+        overview: "Pos 2 คือผู้เล่นที่รับผิดชอบการสร้างความได้เปรียบทางเลเวล ดันเลนกลาง คุมรูนแม่น้ำ และเดินแก๊งสร้างจังหวะ (Tempo Player) เพื่อเปิดพื้นที่ให้ Pos 1 ฟาร์มสะดวก",
+        phases: [
+            {
+                name: "🌅 Laning Phase (0-10 นาที): การชิงเลเวลและการคุมรูน",
+                tips: [
+                    "ฝึกกด Deny ครีปเพื่อตัดเลเวลมิดเลนศัตรู และใช้สกิลดันครีปเข้าป้อมก่อนเวลารูนออก",
+                    "ควบคุมการเก็บรูนแม่น้ำทุกๆ 2 นาที (2m/4m/6m/8m) ร่วมกับซัพพอร์ตแบบ 100%",
+                    "พกขวด Bottle และ Town Portal Scroll ติดตัวตลอดเวลาเพื่อพร้อมวาร์ปช่วยเลนข้าง",
+                    "ชิงทำลายป้อม 1 เลนกลางศัตรูให้ได้ก่อนเพื่อยึดวิชั่นศูนย์กลางแผนที่"
+                ]
+            },
+            {
+                name: "⚡ Mid Game & Ganking (10-25 นาที): การเดินแก๊งและการคุม Tempo",
+                tips: [
+                    "เมื่อได้ไอเทมเคลื่อนที่ไวชิ้นแรก (Blink Dagger / Orchid / Dragon Lance) ให้คอลซัพพอร์ตใช้ Smoke Gank ทันที",
+                    "เลือกเป้าหมายแนวหลัง (Pos 4/5 หรือ Glass Cannon) ในไฟต์ก่อนเสมอ",
+                    "สร้าง Map Pressure บังคับให้ศัตรูต้องวาร์ปมากันเลนเพื่อดึงตัวศัตรูให้ออกจาก Pos 1 ของเรา"
+                ]
+            },
+            {
+                name: "🛡️ Late Game & Positioning (25+ นาที): การทำความเสียหายและการคุมไฟต์",
+                tips: [
+                    "ดึงจังหวะ Cooldown Spikes ของศัตรูมาสร้างการคิล",
+                    "ออกไอเทมกันเวท/กันดิสเอเบิล เช่น BKB / Linken's / Mage Slayer",
+                    "ไม่เดินไปตายเสียจังหวะคนเดียวขณะคุมวิชั่นป่าศัตรู"
+                ]
+            }
         ],
         metrics: [
             { name: "Denies @ 10 mins", target: "10+ ครีป", desc: "การกดยับยั้งเลเวลเลนกลางศัตรู" },
-            { name: "River Rune Control", target: "70%+", desc: "สถิติการชิงเก็บรูนแม่น้ำทั้งหมด" },
-            { name: "Hero Damage Share", target: "25%+", desc: "ส่วนแบ่งทำดาเมจรวมกับทีม" }
+            { name: "River Rune Control", target: "75%+", desc: "สถิติการชิงเก็บรูนแม่น้ำทั้งหมด" },
+            { name: "Hero Damage Share", target: "28%+", desc: "ส่วนแบ่งทำดาเมจรวมกับทีม" },
+            { name: "Gank Success Rate", target: "70%+", desc: "อัตราความสำเร็จในการเดินคิลเลนข้าง" }
         ],
         traps: [
-            "ลืมกดยังเลนกลางหรือถอนตัวไปแก๊งเลนอื่นโดยปล่อยให้ป้อมเลนกลางโดนดันแตกไว",
-            "ปล่อยให้รูนแม่น้ำตกอยู่ในมือเลนกลางฝั่งตรงข้ามจนเลนกลางศัตรูคุมแผนที่ได้ทั้งหมด"
+            "แช่ยืนเลนกลางไม่ไปไหนปล่อยให้มิดเลนศัตรูเดินแก๊งคิลเลนข้างยับเยิน",
+            "โดน Solo Kill ในเลนกลางเสียจังหวะ",
+            "ปล่อยให้รูนแม่น้ำตกอยู่ในมือมิดเลนศัตรูตลอดเกม",
+            "ใช้สกิลใหญ่ใส่ตัวแทงค์ถึกศัตรูแทนที่จะเก็บไว้ใส่ตัวคีย์หลัก"
         ]
     },
     pos3: {
-        title: "Position 3 - Offlane (เปิดไฟต์และแทงค์ทีม)",
-        duties: [
-            "Laning: กดดันกดพลังแครี่ศัตรูให้ฟาร์มลำบากที่สุด ชิงทำลายป้อม 1 ศัตรูเพื่อยึดป่าเลนล่าง/บน",
-            "Mid-Game: ถือไอเทมสร้างจังหวะ (Aura, Blink Dagger) เดินคุมไฟต์แถวหน้าและดึงความสนใจจากตัวหลักทีม",
-            "Late-Game: ล่อซื้อสกิลศัตรู ยืนค้ำไฟต์เพื่อคุ้มกันแนวหลังของทีม"
+        title: "Position 3 — Offlane (เปิดไฟต์ ค้ำหน้า และแทงค์ทีม)",
+        overview: "Pos 3 คือหัวใจของการเปิดไฟต์ (Initiator) และการสร้างความกดดัน (Frontliner) หน้าที่คือการทำลายเลนของ Pos 1 ศัตรู และยึดพื้นที่ป่าศัตรูให้เป็นเขตปลอดภัยของทีมเรา",
+        phases: [
+            {
+                name: "🌅 Laning Phase (0-10 นาที): การกดดันเลนและการทำลายป้อม",
+                tips: [
+                    "กดดันไม่ให้ Pos 1 ศัตรูเก็บ Last Hit ได้สะดวก และตอดเลือดร่วมกับ Pos 4",
+                    "ตัดคลื่นครีป (Creep Skipping) เข้าป้อมศัตรูเมื่อเลนเสียเปรียบ",
+                    "พังป้อม 1 ของแครี่ศัตรูให้ได้ก่อนนาทีที่ 12 เพื่อปิดพื้นที่ฟาร์มเลนเซฟของศัตรู"
+                ]
+            },
+            {
+                name: "⚡ Mid Game & Initiation (10-25 นาที): การถือไอเทมเปิดไฟต์และการคุมพื้นที่",
+                tips: [
+                    "ออกไอเทมเปิดไฟต์หลัก Blink Dagger ภายในนาทีที่ 12-14",
+                    "ยึด Dead Lane และเปลี่ยนพื้นที่ป่าศัตรูให้เป็นเขตปลอดภัยของทีมเรา",
+                    "ออก Aura Items คุ้มกันทีม 5v5 (Pipe of Insight, Crimson Guard, Guardian Greaves)",
+                    "เป็นผู้นำสั่งการทีมตี Roshan ครั้งที่ 1 และ 2"
+                ]
+            },
+            {
+                name: "🛡️ Late Game & Buyback (25+ นาที): การค้ำไฟต์และการป้องกันบ้าน",
+                tips: [
+                    "ล่อซื้อสกิลใหญ่ศัตรู ยืนค้ำไฟต์แถวหน้าเพื่อเปิดโอกาสให้ Pos 1/2 ยิงฟรี",
+                    "คํานวณ Buyback สวนกลับเมื่อศัตรูบุกขึ้นบ้าน High Ground"
+                ]
+            }
         ],
         metrics: [
             { name: "Tower 1 Destroy Time", target: "< 12 นาที", desc: "ตัววัดความสำเร็จการยึดพื้นที่เลนของแครี่ศัตรู" },
-            { name: "Blink Dagger Timing", target: "< 15 นาที", desc: "เป้าหมายเวลาชิ้นส่วนเปิดไฟต์ยอดนิยม" },
-            { name: "Damage Received Share", target: "30%+", desc: "ปริมาณรับดาเมจแทนทีมในไฟต์" }
+            { name: "Blink Dagger Timing", target: "< 14 นาที", desc: "เป้าหมายเวลาชิ้นส่วนเปิดไฟต์ยอดนิยม" },
+            { name: "Damage Received Share", target: "32%+", desc: "ปริมาณรับดาเมจแทนทีมในไฟต์" },
+            { name: "Teamfight Initiation", target: "80%+", desc: "อัตราการเปิดไฟต์สำเร็จให้ทีม" }
         ],
         traps: [
-            "เล่นกล้าๆ กลัวๆ ไม่ออกของสำหรับค้ำไฟต์หรือเปิดไฟต์ ดึงเวลาฟาร์มของแครี่ตัวเอง",
-            "ฟาร์มทับซ้อนพื้นที่ป่าส่วนปลอดภัยที่ควรเหลือไว้ให้แครี่เล่น"
+            "ออกของเน้นดาเมจล้วนแต่ไม่มีเกราะ/BKB จนตายใน 2 วินาทีเมื่อเปิดไฟต์",
+            "เปิดไฟต์ในจุดที่ไม่มีวิชั่นของทีมหรือแครี่ฝั่งเราอยู่ไกลเกินไป",
+            "ฟาร์มทับซ้อนพื้นที่ป่าส่วนปลอดภัยที่ควรเหลือไว้ให้แครี่เล่น",
+            "ปล่อยให้แครี่ศัตรูฟาร์มสบายโดยไม่เดินไปกวน"
         ]
     },
     pos4: {
-        title: "Position 4 - Soft Support (โรมมิ่งและสร้างความปั่นป่วน)",
-        duties: [
-            "Laning: ตอดกวนแครี่ศัตรู ดึงครีปเล็กมาชน ดึงรูน Bounty และเตรียมวาปช่วยเลนกลาง",
-            "Mid-Game: เดินคุมเลนร่วมกับโรมมิ่งช่วยเลนกลาง ทำลายหวอดศัตรู (De-ward)",
-            "Late-Game: ออกไอเทมคุ้มกัน (Force Staff, Glimmer) หรือไอเทมยึดไฟต์เพื่อเปลี่ยนเกม"
+        title: "Position 4 — Soft Support (โรมมิ่ง ปั่นป่วน และ Playmaker)",
+        overview: "Pos 4 คือตัวปั่นป่วนเกมนอกเลน (Playmaker) มีหน้าที่ช่วย Pos 3 กดดันเลน เดินแก๊งเลนกลาง ซุ่มตัดวิชั่น และออกไอเทมยูทิลิตี้เปลี่ยนเกม",
+        phases: [
+            {
+                name: "🌅 Laning Phase (0-10 นาที): การกดดันเลนและการเดินแก๊ง",
+                tips: [
+                    "ช่วย Pos 3 ตอดเลือดศัตรู ซื้อ Sentry Ward ปักบล็อกป่าครีปตัวใหญ่ศัตรู",
+                    "ซุ่มวาร์ปไปแก๊งเลนกลางตอนนาทีที่ 4:00 หรือ 6:00 ร่วมกับรูนแม่น้ำ",
+                    "เดินเก็บรูน Wisdom นาทีที่ 7:00 และ 14:00 ให้ทีมอย่างแม่นยำ"
+                ]
+            },
+            {
+                name: "⚡ Mid Game & Vision Control (10-25 นาที): การซุ่มคิลและการทำลายวิชั่น",
+                tips: [
+                    "Stack ครีปป่า 2-3 แคมป์ให้ Pos 1 และ Pos 2 ฟาร์มเร่งสปีดเงิน",
+                    "ออกไอเทมยูทิลิตี้ช่วยทีม (Force Staff, Eul's, Spirit Vessel, Mage Slayer)",
+                    "เดินคุมวิชั่นรอบถ้ำ Roshan ล่วงหน้า 2 นาทีก่อนตี Roshan"
+                ]
+            },
+            {
+                name: "🛡️ Late Game & Utility (25+ นาที): การตัดสกิลและการเซฟคอร์",
+                tips: [
+                    "ซุ่มเกลียดตัดจังหวะการ Blink หรือร่ายสกิลของตัวคอร์ศัตรู",
+                    "ออก Glimmer Cape / Solar Crest / Lotus Orb เซฟคอร์ฝั่งเรา"
+                ]
+            }
         ],
         metrics: [
-            { name: "Sentry Wards Bought", target: "12+ ชิ้น", desc: "การขัดขวางสายตาศัตรูและการทำลายวิชั่น" },
-            { name: "Kill Participation", target: "50%+", desc: "สถิติมีส่วนร่วมในคะแนนการคิล" },
-            { name: "Save Items Timing", target: "1-2 ชิ้น @ 22 นาที", desc: "ความไวในการครอบครองไอเทมสนับสนุนหลัก" }
+            { name: "Sentry Wards Bought", target: "14+ ชิ้น", desc: "การขัดขวางสายตาศัตรูและการทำลายวิชั่น" },
+            { name: "Kill Participation", target: "55%+", desc: "สถิติมีส่วนร่วมในคะแนนการคิล" },
+            { name: "Wisdom Runes Secured", target: "75%+", desc: "สถิติการชิงรูน Wisdom สำเร็จ" },
+            { name: "Utility Item Timing", target: "< 18 นาที", desc: "ความไวในการครอบครองไอเทมสนับสนุนหลัก" }
         ],
         traps: [
             "ปล่อยให้ Pos 3 ยืนเลนคนเดียวโดนแครี่และซัพศัตรูกดดันจนเสียเลนกลางคัน",
-            "ออกของเน้นทำดาเมจตัวเอง (เช่น Dagon) แทนที่จะทำของมาสนับสนุนรักษาชีวิตตัวแครี่"
+            "แย่ง Last Hit ครีปของ Pos 3 ในเลน",
+            "ออกของเน้นทำดาเมจตัวเอง (เช่น Dagon) แทนที่จะทำของมาสนับสนุนรักษาชีวิตตัวแครี่",
+            "เดินแจกฟรีช่วงเลทเกมเพราะประมาทนอกวิชั่น"
         ]
     },
     pos5: {
-        title: "Position 5 - Hard Support (ดูแลชีวิตแครี่และคุมแผนที่)",
-        duties: [
-            "Laning: แย่งชิงพื้นที่คุมป่า ลากครีปดึงเลนเซฟให้คงที่ ซื้อยาฟื้นฟูเลือดส่งให้แครี่สม่ำเสมอ",
-            "Mid-Game: รักษาพื้นที่ปลอดภัย ปักหวอดป้องกันจุดฟาร์มแครี่ คอยเดินประคองข้างหลังเพื่อแก้ทางซุ่มโจมตี",
-            "Late-Game: สื่อสารทิศทางการบุก ยืนหลบขอบเขตไฟต์ คอยกดเซฟเพื่อนและควบคุมสกิลสกัดศัตรู"
+        title: "Position 5 — Hard Support (ดูแลชีวิตแครี่ คุมวิชั่น และ Shotcaller)",
+        overview: "Pos 5 คือกระดูกสันหลังของทีม (Shotcaller & Ward Master) รับผิดชอบการดูแลชีวิต Pos 1 ในช่วง 10 นาทีแรก ปักวิชั่นทั่วแผนที่ และยืนตำแหน่งร่ายสกิลคุมไฟต์จากแนวหลัง",
+        phases: [
+            {
+                name: "🌅 Laning Phase (0-10 นาที): การเซฟแครี่และการดึงครีป",
+                tips: [
+                    "พก Healing Salve & Tango เติมเลือดให้ Pos 1 ตลอดเวลา ห้ามเสียดายเงิน",
+                    "ดึงครีป (Pulling) ครีปป่าตัวเล็กเข้าหาครีปเลนเพื่อดึงระยะคลื่นครีปให้ชนใกล้ป้อมเรา",
+                    "โซนซัพพอร์ตและออฟเลนศัตรูให้อยู่นอกระยะตอดเลือด Pos 1"
+                ]
+            },
+            {
+                name: "⚡ Mid Game & Map Control (10-25 นาที): การปักวิชั่นและการ Shotcall",
+                tips: [
+                    "ปัก Observer Wards ป้องกันจุดฟาร์มเซฟของ Pos 1 ให้ร้อยเปอร์เซ็นต์",
+                    "ซื้อ Sentry Ward Deward เคลียร์วิชั่นศัตรูรอบถ้ำ Roshan",
+                    "สื่อสารทิศทางการบุก คอลเวลาเกิดของรูน และสั่งแผนการ Smoke"
+                ]
+            },
+            {
+                name: "🛡️ Late Game & Position (25+ นาที): การยืนซ่อนในทรีไลน์และการ Buyback",
+                tips: [
+                    "ยืนซ่อนในทรีไลน์ (Tree Line) ปล่อยสกิลคุมไฟต์โดยไม่ให้ศัตรูเห็นตัวก่อน",
+                    "สละชีวิตเซฟ Pos 1 หากจำเป็นในการปะทะ",
+                    "เก็บเงินสำรองซื้อเกิด (Buyback) เสมอในเลทเกม"
+                ]
+            }
         ],
         metrics: [
-            { name: "Camp Pulled Count", target: "4+ ครั้ง", desc: "สถิติจำนวนการลากดึงเลนช่วง 10 นาทีแรก" },
-            { name: "Observer Wards Uptime", target: "85%+", desc: "ระยะเวลาความสมบูรณ์ของจุดหวอดสังเกตการณ์บนแมพ" },
-            { name: "Deaths Share in Team", target: "< 25%", desc: "พยายามเอาตัวรอดไม่ตายเยอะเกินไปแม้เป็นซัพพอร์ต" }
+            { name: "Camp Pulled Count", target: "5+ ครั้ง", desc: "สถิติจำนวนการลากดึงเลนช่วง 10 นาทีแรก" },
+            { name: "Observer Wards Uptime", target: "90%+", desc: "ระยะเวลาความสมบูรณ์ของจุดหวอดสังเกตการณ์บนแมพ" },
+            { name: "Deward Success Count", target: "8+ ชิ้น", desc: "การเคลียร์หวอดศัตรูสำเร็จ" },
+            { name: "Deaths Share in Team", target: "< 22%", desc: "พยายามเอาตัวรอดไม่ตายเยอะเกินไปแม้เป็นซัพพอร์ต" }
         ],
         traps: [
             "ขโมย Last Hit ครีปแครี่ หรือตีครีปเลนเล่นจนเสียความสมดุลการชนครีปเลน",
-            "ไม่พกใบวาร์ป หรือเดินปักหวอดคนเดียวสุ่มเสี่ยงในจุดไม่มีข้อมูลจนโดนฆ่าฟรี"
+            "ยืนเปิดหน้าให้ศัตรู Blink มาคิลตัวแรกในไฟต์สำคัญ",
+            "ไม่พกใบวาร์ป หรือเดินปักหวอดคนเดียวสุ่มเสี่ยงในจุดไม่มีข้อมูลจนโดนฆ่าฟรี",
+            "ปัก Ward ที่เดิมซ้ำๆ จนโดน Deward คืนทุน"
         ]
     }
 };
@@ -801,16 +937,26 @@ function initLearningCenter() {
 function renderRoleDetails(roleKey) {
     const data = ROLE_DATA[roleKey];
     const container = document.getElementById('role-details-container');
+    if (!data || !container) return;
     
-    let dutiesHtml = '';
-    data.duties.forEach(d => {
-        dutiesHtml += `<li>${d}</li>`;
-    });
+    let phasesHtml = '';
+    if (data.phases) {
+        data.phases.forEach(p => {
+            phasesHtml += `
+                <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:14px; border-radius:8px; margin-bottom:12px;">
+                    <h5 style="margin:0 0 8px; color:var(--cyan); font-size:14px;">${p.name}</h5>
+                    <ul class="role-list" style="margin:0; padding-left:18px;">
+                        ${p.tips.map(t => `<li style="margin-bottom:4px; font-size:13px;">${t}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        });
+    }
 
     let metricsHtml = '';
     data.metrics.forEach(m => {
         metricsHtml += `
-            <div class="metric-card">
+            <div class="metric-card mb-10">
                 <div class="metric-card-title">${m.name}: <span class="gold-text">${m.target}</span></div>
                 <div class="metric-card-desc">${m.desc}</div>
             </div>
@@ -819,34 +965,33 @@ function renderRoleDetails(roleKey) {
 
     let trapsHtml = '';
     data.traps.forEach(t => {
-        trapsHtml += `<li>${t}</li>`;
+        trapsHtml += `<li style="margin-bottom:6px; color:#ff6b6b; font-size:13px;"><i class="fa-solid fa-xmark crimson-text"></i> ${t}</li>`;
     });
 
     container.innerHTML = `
-        <div class="role-details-wrapper">
-            <div class="role-details-title-row">
-                <h2>${data.title}</h2>
+        <div class="role-details-wrapper" style="padding:20px;">
+            <div class="role-details-title-row" style="margin-bottom:14px;">
+                <h2 style="color:#fff; font-size:22px; margin:0;"><i class="fa-solid fa-graduation-cap gold-text"></i> ${data.title}</h2>
+                <p style="margin:6px 0 0; color:#c0c9d8; font-size:13px; line-height:1.5;">${data.overview}</p>
             </div>
             
-            <div class="role-details-grid">
+            <div class="role-details-grid" style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
                 <div class="role-main-column">
-                    <div class="role-section-box">
-                        <h4><i class="fa-solid fa-star"></i> หน้าที่หลักและขั้นตอนการเอาชนะ (Core Objectives)</h4>
-                        <ul class="role-list">
-                            ${dutiesHtml}
-                        </ul>
+                    <div class="role-section-box mb-20">
+                        <h4 style="margin-top:0; color:#d4af37;"><i class="fa-solid fa-clock-rotate-left"></i> คู่มือเจาะลึก 4 ช่วงเวลาการเล่น (Timeline Strategy)</h4>
+                        ${phasesHtml}
                     </div>
                     
                     <div class="role-section-box">
-                        <h4><i class="fa-solid fa-triangle-exclamation"></i> ข้อผิดพลาดหลักที่ขัดขวางการขึ้นแรงก์ (Common Traps)</h4>
-                        <ul class="role-list">
+                        <h4 style="margin-top:0; color:#ff4d55;"><i class="fa-solid fa-triangle-exclamation"></i> 5 ข้อผิดพลาดคลาสสิกของตำแหน่งนี้ (Common Traps & Fixes)</h4>
+                        <ul class="role-list" style="list-style:none; padding:0;">
                             ${trapsHtml}
                         </ul>
                     </div>
                 </div>
                 
                 <div class="role-sidebar-column">
-                    <h4><i class="fa-solid fa-chart-line"></i> ตัวชี้วัดเป้าหมาย (KPI)</h4>
+                    <h4 style="margin-top:0; color:#00d2d3;"><i class="fa-solid fa-chart-line"></i> 5 ตัวชี้วัดเป้าหมายประจำตำแหน่ง (KPIs)</h4>
                     ${metricsHtml}
                 </div>
             </div>
