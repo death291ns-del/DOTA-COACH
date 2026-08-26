@@ -366,13 +366,13 @@ const StorageManager = {
     },
 
     getRankTierInfo(mmr) {
-        if (mmr >= 5632) return { name: 'Immortal 👑', color: '#e5c158', badge: '🛡️ Immortal', min: 5632 };
-        if (mmr >= 4620) return { name: 'Divine 💎', color: '#c3a1ff', badge: '💎 Divine', min: 4620 };
-        if (mmr >= 3850) return { name: 'Ancient ⚔️', color: '#4bcffa', badge: '⚔️ Ancient', min: 3850 };
-        if (mmr >= 3080) return { name: 'Legend 🛡️', color: '#00d2d3', badge: '🛡️ Legend', min: 3080 };
-        if (mmr >= 2310) return { name: 'Archon 👑', color: '#ff9f43', badge: '👑 Archon', min: 2310 };
-        if (mmr >= 1540) return { name: 'Crusader 🗡️', color: '#2e86de', badge: '🗡️ Crusader', min: 1540 };
-        if (mmr >= 770)  return { name: 'Guardian 🛡️', color: '#54a0ff', badge: '🛡️ Guardian', min: 770 };
-        return { name: 'Herald 📜', color: '#8395a7', badge: '📜 Herald', min: 0 };
+        if (mmr >= 5632) return { tier: 'Immortal', name: 'Immortal 👑', color: '#e5c158', badge: '🛡️ Immortal', min: 5632, nextRank: 'Top Leaderboard 🌟' };
+        if (mmr >= 4620) return { tier: 'Divine', name: 'Divine 💎', color: '#c3a1ff', badge: '💎 Divine', min: 4620, nextRank: 'Immortal (5,632+ MMR)' };
+        if (mmr >= 3850) return { tier: 'Ancient', name: 'Ancient ⚔️', color: '#4bcffa', badge: '⚔️ Ancient', min: 3850, nextRank: 'Divine (4,620 MMR)' };
+        if (mmr >= 3080) return { tier: 'Legend', name: 'Legend 🛡️', color: '#00d2d3', badge: '🛡️ Legend', min: 3080, nextRank: 'Ancient (3,850 MMR)' };
+        if (mmr >= 2310) return { tier: 'Archon', name: 'Archon 👑', color: '#ff9f43', badge: '👑 Archon', min: 2310, nextRank: 'Legend (3,080 MMR)' };
+        if (mmr >= 1540) return { tier: 'Crusader', name: 'Crusader 🗡️', color: '#2e86de', badge: '🗡️ Crusader', min: 1540, nextRank: 'Archon (2,310 MMR)' };
+        if (mmr >= 770)  return { tier: 'Guardian', name: 'Guardian 🛡️', color: '#54a0ff', badge: '🛡️ Guardian', min: 770, nextRank: 'Crusader (1,540 MMR)' };
+        return { tier: 'Herald', name: 'Herald 📜', color: '#8395a7', badge: '📜 Herald', min: 0, nextRank: 'Guardian (770 MMR)' };
     }
 };

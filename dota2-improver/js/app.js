@@ -2993,11 +2993,14 @@ function initRankGuide() {
     const currentMmr = mmrData.currentMmr || 2200;
     const currentRankInfo = StorageManager.getRankTierInfo(currentMmr);
 
-    if (currentTierHeader) currentTierHeader.textContent = `${currentRankInfo.tier} (${currentMmr.toLocaleString()} MMR)`;
-    if (currentDescHeader) currentDescHeader.textContent = `เป้าหมายถัดไป: ${currentRankInfo.nextRank}`;
+    const displayName = currentRankInfo.name || `${currentRankInfo.tier || 'Archon'} 👑`;
+    const nextRankText = currentRankInfo.nextRank || 'Rank Up!';
+
+    if (currentTierHeader) currentTierHeader.textContent = `${displayName} (${currentMmr.toLocaleString()} MMR)`;
+    if (currentDescHeader) currentDescHeader.textContent = `เป้าหมายถัดไป: ${nextRankText}`;
 
     const ranks = Object.keys(RANK_ROADMAP_DATABASE);
-    let selectedRank = currentRankInfo.tier.split(' ')[0]; // e.g. "Archon"
+    let selectedRank = currentRankInfo.tier ? currentRankInfo.tier.split(' ')[0] : 'Archon';
     if (!RANK_ROADMAP_DATABASE[selectedRank]) selectedRank = "Archon";
 
     const renderSelectorButtons = () => {
