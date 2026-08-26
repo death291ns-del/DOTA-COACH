@@ -760,6 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initRankGuide();
     initProSettingsGuide();
     initPatchNotes();
+    initMapGuide();
     
     fetchHeroList();
     
@@ -4116,5 +4117,179 @@ function showProSettingsModal() {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
     });
+}
+
+// ============================================================
+// MAP LEARNING & WARDING PLAYBOOK MODULE
+// ============================================================
+function initMapGuide() {
+    const container = document.getElementById('mapguide-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <!-- Official Real Dota 2 Map Visualizer -->
+        <div class="card mb-20" style="border-top: 4px solid var(--green);">
+            <div class="card-header" style="background:linear-gradient(135deg, rgba(46,204,113,0.1), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="margin:0;"><i class="fa-solid fa-map-location-dot green-text"></i> แผนที่จริง Dota 2 Patch Overview (4K Tactical Map)</h3>
+                    <p class="subtitle" style="margin-top:2px;">แผนที่จริงแสดงตำแหน่ง Base, River, Roshan Pits, Twin Gates, Lotus Pools และจุดยุทธศาสตร์หลัก</p>
+                </div>
+            </div>
+            <div class="card-body" style="padding:20px; text-align:center; background:rgba(0,0,0,0.4);">
+                <div style="position:relative; display:inline-block; border-radius:12px; overflow:hidden; border:2px solid rgba(46,204,113,0.3); box-shadow:0 12px 40px rgba(0,0,0,0.8); max-width:100%;">
+                    <img src="assets/dota2_map_real.png" alt="Dota 2 Official Real Map In-Game" style="width:100%; max-width:820px; height:auto; display:block; margin:0 auto; border-radius:8px;">
+                </div>
+                <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:14px; font-size:12px; color:#c0c9d8;">
+                    <span><i class="fa-solid fa-square green-text"></i> <strong>Radiant Base:</strong> ฐานฝั่งซ้ายล่าง</span>
+                    <span><i class="fa-solid fa-square crimson-text"></i> <strong>Dire Base:</strong> ฐานฝั่งขวาบน</span>
+                    <span><i class="fa-solid fa-water cyan-text"></i> <strong>River:</strong> แม่น้ำตัดกลางแผนที่</span>
+                    <span><i class="fa-solid fa-circle-dot purple-text"></i> <strong>Twin Gates:</strong> ประตูวาร์ปมุมแผนที่</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-layout mb-20" style="grid-template-columns: 2fr 1fr; gap:20px; align-items:start;">
+            
+            <!-- Left Main Column: Map Zones & Warding Playbook -->
+            <div style="display:flex; flex-direction:column; gap:20px;">
+                
+                <!-- 1. Map Zones & Dead Lane Control -->
+                <div class="card">
+                    <div class="card-header" style="background:rgba(200,35,44,0.08); border-bottom:1px solid rgba(200,35,44,0.2);">
+                        <h3 style="margin:0;"><i class="fa-solid fa-skull-crossbones crimson-text"></i> 1. ยุทธศาสตร์คุมพื้นที่ & การอ่าน Dead Lane (Dead Lane Strategy)</h3>
+                    </div>
+                    <div class="card-body" style="padding:20px;">
+                        <p style="font-size:13px; color:#c0c9d8; margin-top:0; margin-bottom:16px; line-height:1.6;">
+                            <strong>"Dead Lane (เลนอันตราย/เลนตาย)"</strong> คือโซนที่มีอัตราการโดนซุ่มยิงสูงที่สุดใน Dota 2 มักเป็นเลนออฟเลนศัตรู หรือเลนที่ป้อม 1 ฝั่งเราพังไปแล้ว ศัตรูสามารถพก Smoke วาร์ปมาดักซุ่มฆ่าได้ใน 3 วินาที!
+                        </p>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                            <!-- Dead Lane Box -->
+                            <div style="background:rgba(200,35,44,0.08); border-left:4px solid var(--crimson); padding:14px; border-radius:6px;">
+                                <strong class="crimson-text" style="font-size:14px;"><i class="fa-solid fa-triangle-exclamation"></i> 🔴 Dead Lane (เลนอันตราย)</strong>
+                                <ul style="margin:8px 0 0; padding-left:18px; font-size:12px; color:#ddd; line-height:1.5;">
+                                    <li><strong>กฎเหล็ก Pos 1:</strong> ห้ามฟาร์มใน Dead Lane เด็ดขาดหากไม่มี BKB หรือวิชั่น!</li>
+                                    <li><strong>ทางแก้:</strong> ให้ Pos 3/4 ไปดันคลื่นครีปใน Dead Lane เพื่อดึงตัวศัตรูมากันเลน</li>
+                                </ul>
+                            </div>
+
+                            <!-- Triangle Zone Box -->
+                            <div style="background:rgba(212,175,55,0.08); border-left:4px solid var(--gold); padding:14px; border-radius:6px;">
+                                <strong class="gold-text" style="font-size:14px;"><i class="fa-solid fa-gem"></i> 🟡 Triangle Zone (สามเหลี่ยมทองคำ)</strong>
+                                <ul style="margin:8px 0 0; padding-left:18px; font-size:12px; color:#ddd; line-height:1.5;">
+                                    <li>ป่าเล็ก + เนินสูงใกล้ป้อม 2 + ถ้ำ Roshan</li>
+                                    <li><strong>โซนฟาร์มปลอดภัยที่สุด:</strong> มีป้อม 2 และเนินสูงคอยคุ้มกัน ปลอดภัยจากซุ่มแก๊ง 90%</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                            <!-- Safe Zone -->
+                            <div style="background:rgba(46,204,113,0.08); border-left:4px solid var(--green); padding:14px; border-radius:6px;">
+                                <strong class="green-text" style="font-size:14px;"><i class="fa-solid fa-shield-halved"></i> 🟢 Safe Farm Zone (ป่าใกล้บ้าน)</strong>
+                                <p style="margin:6px 0 0; font-size:12px; color:#bbb; line-height:1.5;">
+                                    ป่าหลักหลังป้อม 1-2 เหมาะสำหรับการฟาร์มของ Pos 1 & 2 ช่วงนาที 0-15 ก่อนป้อมพัง
+                                </p>
+                            </div>
+
+                            <!-- Objective Pit Zone -->
+                            <div style="background:rgba(0,210,255,0.08); border-left:4px solid var(--cyan); padding:14px; border-radius:6px;">
+                                <strong class="cyan-text" style="font-size:14px;"><i class="fa-solid fa-dragon"></i> 🔵 Roshan & Objective Pit</strong>
+                                <p style="margin:6px 0 0; font-size:12px; color:#bbb; line-height:1.5;">
+                                    พื้นที่คุมบอส Roshan ชิง Aegis ก่อนขึ้นดัน High Ground ในนาทีที่ 20+ และ 30+
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Vision & Warding Playbook -->
+                <div class="card">
+                    <div class="card-header" style="background:rgba(0,210,255,0.08); border-bottom:1px solid rgba(0,210,255,0.2);">
+                        <h3 style="margin:0;"><i class="fa-solid fa-eye cyan-text"></i> 2. คู่มือจุดปัก Observer & Sentry Ward (Vision Control)</h3>
+                    </div>
+                    <div class="card-body" style="padding:20px;">
+                        <p style="font-size:13px; color:#c0c9d8; margin-top:0; margin-bottom:16px;">
+                            การปัก Ward ที่มีประสิทธิภาพไม่ได้ขึ้นกับจำนวน แต่ขึ้นอยู่กับ <strong>วัตถุประสงค์ (Purpose)</strong> ในช่วงเวลานั้นของเกม:
+                        </p>
+
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:12px 16px; border-radius:8px;">
+                                <strong style="color:#00d2d3; font-size:13px;"><i class="fa-solid fa-mountain"></i> High Ground Cliff Wards (เนินสูง 360 องศา):</strong>
+                                <p style="margin:4px 0 0; font-size:12px; color:#bbb;">
+                                    จุดปักยอดนิยมบนเนินหินป่าศัตรู ให้วิชั่นกว้างที่สุด แต่มักโดน Sentry Deward ได้ง่าย <u>วิธีใช้:</u> ปักเฉพาะตอนคอล Smoke เข้าไปไฟต์ป่าศัตรู
+                                </p>
+                            </div>
+
+                            <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:12px 16px; border-radius:8px;">
+                                <strong style="color:#2ecc71; font-size:13px;"><i class="fa-solid fa-shield"></i> Defensive Lane Wards (ปักป้องกันซัพพอร์ต):</strong>
+                                <p style="margin:4px 0 0; font-size:12px; color:#bbb;">
+                                    ปักไว้ตรงทางเชื่อมระหว่างแม่น้ำกับป่าฝั่งเรา ช่วยให้ Pos 1 มองเห็นมิดหรือซัพศัตรูเดิน Smoke มาแก๊งล่วงหน้า 5 วินาที
+                                </p>
+                            </div>
+
+                            <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:12px 16px; border-radius:8px;">
+                                <strong style="color:#d4af37; font-size:13px;"><i class="fa-solid fa-dragon"></i> Roshan Pit Outpost Wards (ปักคุมถ้ำ Roshan):</strong>
+                                <p style="margin:4px 0 0; font-size:12px; color:#bbb;">
+                                    ปักขอบต้นไม้หรือเนินหินใกล้ออตโพสต์ถ้ำ Roshan คุมวิชั่น 2 นาทีก่อนตี Roshan เช็คศัตรูแอบลักลอบเข้ามา
+                                </p>
+                            </div>
+
+                            <div style="background:var(--bg-card-hover); border:1px solid var(--border-color); padding:12px 16px; border-radius:8px;">
+                                <strong style="color:#ff9f43; font-size:13px;"><i class="fa-solid fa-book"></i> Wisdom Rune Cliff Wards (ปักซุ่มรูน Wisdom):</strong>
+                                <p style="margin:4px 0 0; font-size:12px; color:#bbb;">
+                                    ปักคุมเนินรูน Wisdom ฝั่งศัตรูในนาทีที่ 6:45 และ 13:45 เพื่อให้ Pos 4 สตีลรูน Wisdom ของศัตรูได้ปลอดภัย
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Sidebar Column: Camp Timings Cheatsheet -->
+            <div class="card" style="position:sticky; top:20px;">
+                <div class="card-header" style="background:rgba(212,175,55,0.08); border-bottom:1px solid rgba(212,175,55,0.2);">
+                    <h3 style="margin:0;"><i class="fa-solid fa-clock gold-text"></i> ตารางเวลา Map Timings</h3>
+                </div>
+                <div class="card-body" style="padding:16px;">
+                    <p style="font-size:12px; color:#8e95a5; margin-top:0; margin-bottom:12px;">เวลาสำคัญในเกมที่ต้องจำขึ้นใจ:</p>
+
+                    <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
+                        <div style="background:var(--bg-card-hover); padding:10px; border-radius:6px; border-left:3px solid var(--cyan);">
+                            <strong style="color:#00d2d3;">🌾 Small Camp Pull:</strong>
+                            <div style="color:#fff; margin-top:2px;">นาที <code>xx:15</code> และ <code>xx:45</code></div>
+                            <small style="color:#8e95a5;">ดึงครีปป่าเล็กเข้าหาครีปเลน</small>
+                        </div>
+
+                        <div style="background:var(--bg-card-hover); padding:10px; border-radius:6px; border-left:3px solid var(--gold);">
+                            <strong style="color:#d4af37;">📦 Large Camp Stack:</strong>
+                            <div style="color:#fff; margin-top:2px;">นาที <code>xx:53</code> - <code>xx:55</code></div>
+                            <small style="color:#8e95a5;">ตีครีปแล้ววิ่งออกนอกบล็อก 1,200R</small>
+                        </div>
+
+                        <div style="background:var(--bg-card-hover); padding:10px; border-radius:6px; border-left:3px solid var(--purple);">
+                            <strong style="color:#a55eea;">🔮 Wisdom Rune Spawn:</strong>
+                            <div style="color:#fff; margin-top:2px;">ทุกๆ 7 นาที (<code>07:00</code>, <code>14:00</code>...)</div>
+                            <small style="color:#8e95a5;">แจก XP ทั้งทีม</small>
+                        </div>
+
+                        <div style="background:var(--bg-card-hover); padding:10px; border-radius:6px; border-left:3px solid var(--green);">
+                            <strong style="color:#2ecc71;">🌸 Lotus Pool Healing:</strong>
+                            <div style="color:#fff; margin-top:2px;">ทุกๆ 3 นาที (<code>03:00</code>, <code>06:00</code>...)</div>
+                            <small style="color:#8e95a5;">เก็บดอกบัวเพิ่ม HP/Mana</small>
+                        </div>
+
+                        <div style="background:var(--bg-card-hover); padding:10px; border-radius:6px; border-left:3px solid var(--crimson);">
+                            <strong style="color:#ff4d55;">👹 Tormentor Spawn:</strong>
+                            <div style="color:#fff; margin-top:2px;">นาทีที่ <code>20:00</code> (เกิดใหม่ทุก 10m)</div>
+                            <small style="color:#8e95a5;">แจก Aghanim Shard ฟรี</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    `;
 }
 
