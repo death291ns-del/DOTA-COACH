@@ -45,6 +45,9 @@
                 <button class="nav-item" data-tab="tierlist">
                     <i class="fa-solid fa-ranking-star crimson-text"></i> Patch Tier List
                 </button>
+                <button class="nav-item" data-tab="rankguide">
+                    <i class="fa-solid fa-road gold-text"></i> Rank Roadmap
+                </button>
             </nav>
 
             <!-- Gamification XP Bar in Sidebar -->
@@ -420,16 +423,55 @@
                 <div class="grid-layout">
                     <!-- Interactive Match Timer -->
                     <div class="card card-span-2">
-                        <div class="card-header">
-                            <h3><i class="fa-solid fa-bullhorn crimson-text"></i> Match Timer & Interactive Coach</h3>
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3><i class="fa-solid fa-bullhorn crimson-text"></i> Match Timer & Audio Companion</h3>
+                            <button class="btn btn-small btn-secondary" id="btn-test-audio"><i class="fa-solid fa-volume-high gold-text"></i> 🔊 ทดสอบเสียงเตือน</button>
                         </div>
                         <div class="card-body text-center timer-dashboard">
                             <div class="timer-display" id="in-game-timer">00:00</div>
-                            <div class="timer-controls">
-                                <button class="btn btn-success btn-large" id="btn-timer-start-stop">
-                                    <i class="fa-solid fa-play"></i> เริ่มตัวเตือนเวลากลยุทธ์
+                            
+                            <div class="timer-controls mb-16" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:15px;">
+                                <button class="btn btn-success btn-large" id="btn-timer-start-stop" style="min-width:170px;">
+                                    <i class="fa-solid fa-play"></i> เริ่มเวลา (00:00)
                                 </button>
-                                <button class="btn btn-secondary" id="btn-timer-reset">รีเซ็ต</button>
+                                <button class="btn btn-primary btn-large" id="btn-timer-pregame" style="background: linear-gradient(135deg, #d4af37, #e67e22); border:none; color:#0f1015; font-weight:700;">
+                                    <i class="fa-solid fa-bullhorn"></i> เริ่มถอยหลัง (-01:00 Pre-Game)
+                                </button>
+                                <button class="btn btn-secondary" id="btn-timer-reset"><i class="fa-solid fa-rotate-left"></i> รีเซ็ต</button>
+                            </div>
+
+                            <!-- Direct Minute Sync Input Box -->
+                            <div style="display:flex; gap:8px; justify-content:center; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+                                <span style="font-size:12px; color:var(--text-secondary); font-weight:600;"><i class="fa-solid fa-crosshairs gold-text"></i> พิมพ์เวลาในเกมตอนนี้:</span>
+                                <input type="text" id="timer-sync-input" placeholder="เช่น 3:45 หรือ 12" style="width:140px; padding:6px 12px; background:var(--bg-card-hover); border:1px solid var(--border-color); border-radius:6px; color:#fff; font-size:13px; text-align:center;">
+                                <button class="btn btn-small btn-primary" id="btn-timer-sync-submit"><i class="fa-solid fa-sync"></i> ซิงค์เวลานี้ทันที</button>
+                            </div>
+
+                            <!-- Quick Time Adjustment Controls -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; font-weight:600;">
+                                    <i class="fa-solid fa-clock-rotate-left gold-text"></i> ปุ่มซิงค์เวลาด่วน (แก้เวลาไม่ตรงเมื่อหยุดเกม/พับจอ):
+                                </div>
+                                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:10px;">
+                                    <button class="btn btn-small btn-secondary btn-adjust-time" data-seconds="-30">-30 วิ</button>
+                                    <button class="btn btn-small btn-secondary btn-adjust-time" data-seconds="-10">-10 วิ</button>
+                                    <button class="btn btn-small btn-secondary btn-adjust-time" data-seconds="10">+10 วิ</button>
+                                    <button class="btn btn-small btn-secondary btn-adjust-time" data-seconds="30">+30 วิ</button>
+                                </div>
+                                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="-60">-01:00 (Pre-game)</button>
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="0">00:00 (แตรเริ่ม)</button>
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="120">02:00 (รูนแรก)</button>
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="180">03:00 (Bounty)</button>
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="420">07:00 (Wisdom)</button>
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="840">14:00 (Wisdom 2)</button>
+                                    <button class="btn btn-small btn-secondary btn-set-time" data-seconds="1200">20:00 (Tormentor)</button>
+                                </div>
+                            </div>
+
+                            <!-- Hotkeys Help -->
+                            <div style="font-size:11px; color:#8e95a5;">
+                                ⌨️ <strong>คีย์ลัดคีย์บอร์ด:</strong> [Spacebar] เริ่ม/หยุด | [ลูกศร Left/Right] -+10 วิ | [R] รีเซ็ต 00:00
                             </div>
                         </div>
                     </div>
@@ -446,11 +488,16 @@
 
                     <!-- Voice Alerts Settings -->
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                             <h3><i class="fa-solid fa-bell"></i> Audio Alerts Toggles</h3>
                         </div>
                         <div class="card-body">
                             <div class="alert-toggle-list">
+                                <label class="switch-container">
+                                    <span>🇹🇭 ใช้เสียงพากย์ภาษาไทย</span>
+                                    <input type="checkbox" id="alert-lang-th" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
                                 <label class="switch-container">
                                     <span>Bounty Runes (ทุก 3 นาที)</span>
                                     <input type="checkbox" id="alert-bounty" checked>

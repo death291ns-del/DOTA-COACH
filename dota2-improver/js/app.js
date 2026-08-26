@@ -1730,6 +1730,49 @@ async function fetchLiveItemBuild(heroName, containerId) {
     }
 }
 
+function generateDefaultHeroBuild(heroName) {
+    return {
+        role: "Flexible Role / Meta Pick",
+        playstyles: [{
+            name: "⚔️ Main Ranked Build (Level 1-25 Skill Progression)",
+            winCondition: `ฟาร์มไอเทมหลัก คุมเลน และใช้สกิลในจังหวะไฟต์ใหญ่ของ ${heroName} ให้เกิดประโยชน์สูงสุด`,
+            skillBuild: [
+                "Lv 1: สกิล Q (หลัก)",
+                "Lv 2: สกิล W (ช่วยคุมเลน)",
+                "Lv 3: สกิล Q (เน้นดาเมจ)",
+                "Lv 4: สกิล E (พาสซีฟ)",
+                "Lv 5: สกิล Q (เน้นกดดัน)",
+                "Lv 6: สกิล R (อัลติเมต 💥)",
+                "Lv 7: สกิล Q (Max 4)",
+                "Lv 8: สกิล W (Lv 2)",
+                "Lv 9: สกิล W (Lv 3)",
+                "Lv 10: 🌟 Talent (+HP / Attack Speed)",
+                "Lv 11: สกิล W (Max 4)",
+                "Lv 12: สกิล R (อัลติเมต Lv 2)",
+                "Lv 13: สกิล E (Lv 2)",
+                "Lv 14: สกิล E (Lv 3)",
+                "Lv 15: 🌟 Talent (+Cooldown / Damage)",
+                "Lv 16: สกิล E (Max 4)",
+                "Lv 18: สกิล R (อัลติเมต Max 3)",
+                "Lv 20: 🌟 Talent (+Special Skill Upgrade)",
+                "Lv 25: 🌟 Talent (+Cap Upgrade / Game Changer 💥)"
+            ],
+            items: {
+                starting: ["Tango", "Quelling Blade", "Circlet", "Iron Branch x2"],
+                early: ["Power Treads", "Magic Wand", "Wraith Band"],
+                core: ["Core Item #1 (นาที 12-15)", "BKB (Black King Bar)", "Aghanim's Shard"],
+                luxury: ["Aghanim's Scepter", "Eye of Skadi", "Satanic", "Blink Dagger"],
+                situational: ["Linken's Sphere (vs Target Spell)", "Nullifier (vs Save Item)"]
+            },
+            focusSkills: [
+                `การคุมเลน 10 นาทีแรกด้วย ${heroName}`,
+                "การจัดตำแหน่งในไฟต์ใหญ่ไม่ให้โดนจับตายก่อน",
+                "การซื้อเกิด (Buyback) เมื่อถึงช่วง Late Game"
+            ]
+        }]
+    };
+}
+
 async function showHeroBuildModal(heroName) {
     const buildData = HERO_BUILDS[heroName];
     const itemConsts = await getItemConstants();
@@ -1756,6 +1799,9 @@ async function showHeroBuildModal(heroName) {
                 focusSkills: buildData.focusSkills
             }];
         }
+    } else {
+        const fallback = generateDefaultHeroBuild(heroName);
+        playstyles = fallback.playstyles;
     }
 
     const renderBuildContent = (build) => {
@@ -2126,6 +2172,20 @@ function initSettings() {
             badge.textContent = 'Active Player Sync';
         }
     }
+
+    // Auto-save on input typing (Real-time Cookie & LocalStorage sync)
+    const autoSaveHandler = () => {
+        const currentSettings = {
+            steamId: steamEl ? steamEl.value.trim() : '',
+            dotabuffLink: dotaEl ? dotaEl.value.trim() : '',
+            dailyTarget: targetEl ? (parseInt(targetEl.value, 10) || 3) : 3
+        };
+        StorageManager.saveSettings(currentSettings);
+    };
+
+    if (steamEl) steamEl.addEventListener('input', autoSaveHandler);
+    if (dotaEl) dotaEl.addEventListener('input', autoSaveHandler);
+    if (targetEl) targetEl.addEventListener('input', autoSaveHandler);
     
     const form = document.getElementById('settings-form');
     if (form) {
@@ -2157,7 +2217,7 @@ function initSettings() {
                 }
             }
             
-            alert('บันทึกการตั้งค่าแล้ว!');
+            alert('✅ บันทึกข้อมูลและคุกกี้ (Cookies) เรียบร้อยแล้ว! ระบบจะจำข้อมูลของคุณตลอดไป');
             switchTab('dashboard');
         });
     }
@@ -2169,9 +2229,95 @@ function initSettings() {
 // --- Interactive Game Trainer ---
 function initTimerUI() {
     const startStopBtn = document.getElementById('btn-timer-start-stop');
+    const pregameBtn = document.getElementById('btn-timer-pregame');
     const resetBtn = document.getElementById('btn-timer-reset');
     const display = document.getElementById('in-game-timer');
+    const testAudioBtn = document.getElementById('btn-test-audio');
+    const langThCheckbox = document.getElementById('alert-lang-th');
+    const syncInput = document.getElementById('timer-sync-input');
+    const syncSubmitBtn = document.getElementById('btn-timer-sync-submit');
     
+    // Toggle Thai / English speech
+    if (langThCheckbox) {
+        langThCheckbox.addEventListener('change', (e) => {
+            TimingEngine.useThaiVoice = e.target.checked;
+        });
+    }
+
+    // Audio Test Button
+    if (testAudioBtn) {
+        testAudioBtn.addEventListener('click', () => {
+            TimingEngine.testAudioAlert();
+        });
+    }
+
+    // Helper to parse "3:45" or "12" into total seconds
+    const parseTimeToSeconds = (str) => {
+        if (!str) return null;
+        const trimmed = str.trim();
+        if (trimmed.includes(':')) {
+            const parts = trimmed.split(':');
+            const m = parseInt(parts[0], 10) || 0;
+            const s = parseInt(parts[1], 10) || 0;
+            return m * 60 + s;
+        }
+        const num = parseFloat(trimmed);
+        if (!isNaN(num)) return Math.round(num * 60);
+        return null;
+    };
+
+    // Direct Minute Sync Submit Handler
+    const handleDirectSync = () => {
+        if (!syncInput) return;
+        const totalSecs = parseTimeToSeconds(syncInput.value);
+        if (totalSecs !== null) {
+            TimingEngine.setTime(totalSecs);
+            if (!TimingEngine.isRunning && startStopBtn) {
+                startStopBtn.click(); // Auto-start if not already running!
+            }
+            syncInput.value = '';
+        } else {
+            alert('กรุณาพิมพ์เวลาในเกมให้ถูกต้อง เช่น 3:45 หรือ 12');
+        }
+    };
+
+    if (syncSubmitBtn) syncSubmitBtn.addEventListener('click', handleDirectSync);
+    if (syncInput) {
+        syncInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleDirectSync();
+            }
+        });
+    }
+
+    // Start Pre-Game (-01:00) Button
+    if (pregameBtn) {
+        pregameBtn.addEventListener('click', () => {
+            TimingEngine.setTime(-60);
+            if (!TimingEngine.isRunning && startStopBtn) {
+                startStopBtn.click();
+            }
+        });
+    }
+
+    // Quick Time Adjustment Buttons (+10s, -10s, +30s, -30s)
+    document.querySelectorAll('.btn-adjust-time').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const secs = parseInt(btn.getAttribute('data-seconds'), 10) || 0;
+            TimingEngine.adjustTime(secs);
+        });
+    });
+
+    // Preset Time Set Buttons (00:00, 02:00, 07:00, etc.)
+    document.querySelectorAll('.btn-set-time').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const secs = parseInt(btn.getAttribute('data-seconds'), 10) || 0;
+            TimingEngine.setTime(secs);
+        });
+    });
+
+    // Toggle Start / Stop
     if (startStopBtn) {
         startStopBtn.addEventListener('click', () => {
             const isRunning = TimingEngine.start(
@@ -2202,6 +2348,7 @@ function initTimerUI() {
         });
     }
     
+    // Reset Button
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
             TimingEngine.reset();
@@ -2212,6 +2359,29 @@ function initTimerUI() {
             }
         });
     }
+
+    // Keyboard Hotkeys (Active when not typing in text inputs)
+    window.addEventListener('keydown', (e) => {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (!activeTab || activeTab.id !== 'timings') return; // Only activate in Live Companion tab
+        
+        const tagName = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') return;
+
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (startStopBtn) startStopBtn.click();
+        } else if (e.code === 'ArrowRight') {
+            e.preventDefault();
+            TimingEngine.adjustTime(10);
+        } else if (e.code === 'ArrowLeft') {
+            e.preventDefault();
+            TimingEngine.adjustTime(-10);
+        } else if (e.code === 'KeyR') {
+            e.preventDefault();
+            if (resetBtn) resetBtn.click();
+        }
+    });
 }
 
 // --- Meta Hero Recommendations ---

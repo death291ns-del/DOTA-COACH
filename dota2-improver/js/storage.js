@@ -10,17 +10,59 @@ const STORAGE_KEYS = {
 };
 
 const StorageManager = {
+    // --- Cookie Helpers (365 days expiration) ---
+    setCookie(name, value, days = 365) {
+        try {
+            const d = new Date();
+            d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + d.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/;SameSite=Lax";
+        } catch (e) {
+            console.log('Cookie write error:', e);
+        }
+    },
+
+    getCookie(name) {
+        try {
+            const cname = name + "=";
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const ca = decodedCookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(cname) == 0) {
+                    return c.substring(cname.length, c.length);
+                }
+            }
+        } catch (e) {
+            console.log('Cookie read error:', e);
+        }
+        return "";
+    },
+
     // --- Settings ---
     getSettings() {
+        const cookieSteamId = this.getCookie('dota2_steam_id');
+        const cookieDotabuff = this.getCookie('dota2_dotabuff');
+        const cookieTarget = this.getCookie('dota2_daily_target');
+
         const defaultSettings = {
-            steamId: '',
-            dotabuffLink: '',
-            dailyTarget: 3
+            steamId: cookieSteamId || '',
+            dotabuffLink: cookieDotabuff || '',
+            dailyTarget: cookieTarget ? (parseInt(cookieTarget, 10) || 3) : 3
         };
+
         const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
         if (!raw) return defaultSettings;
         try {
-            return { ...defaultSettings, ...JSON.parse(raw) };
+            const parsed = JSON.parse(raw);
+            return {
+                steamId: parsed.steamId || cookieSteamId || '',
+                dotabuffLink: parsed.dotabuffLink || cookieDotabuff || '',
+                dailyTarget: parsed.dailyTarget || (parseInt(cookieTarget, 10) || 3)
+            };
         } catch (e) {
             return defaultSettings;
         }
@@ -28,6 +70,9 @@ const StorageManager = {
 
     saveSettings(settings) {
         localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+        if (settings.steamId !== undefined) this.setCookie('dota2_steam_id', settings.steamId);
+        if (settings.dotabuffLink !== undefined) this.setCookie('dota2_dotabuff', settings.dotabuffLink);
+        if (settings.dailyTarget !== undefined) this.setCookie('dota2_daily_target', settings.dailyTarget.toString());
         return true;
     },
 
