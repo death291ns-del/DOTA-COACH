@@ -1123,69 +1123,145 @@ function showMatchReviewModal(m, heroName, isWin, gradeInfo) {
     modal.style.zIndex = '3500';
 
     const kdaRatioNum = parseFloat(gradeInfo.kdaRatio);
-    let highlights = [];
-    let areasToImprove = [];
+    const kills = gradeInfo.kills;
+    const deaths = gradeInfo.deaths;
+    const assists = gradeInfo.assists;
 
-    if (gradeInfo.kills >= 8) highlights.push(`🔥 สังหารศัตรูได้สูงถึง <strong>${gradeInfo.kills} ตัว</strong> มีส่วนร่วมสร้างความเสียหายหนักในไฟต์`);
-    if (gradeInfo.deaths <= 2) highlights.push(`🛡️ ตายน้อยมากเพียง <strong>${gradeInfo.deaths} ตัว</strong> ยืนตำแหน่งได้ปลอดภัย ยอดเยี่ยมมาก!`);
-    if (kdaRatioNum >= 3.5) highlights.push(`⚡ อัตราส่วน KDA สูงถึง <strong>${gradeInfo.kdaRatio}</strong> ทำหน้าที่หลักของฮีโร่ได้อย่างสมบูรณ์แบบ`);
-    if (isWin) highlights.push(`🏆 คว้าชัยชนะแมตช์นี้มาได้สำเร็จ (+25 MMR)`);
+    // Calculate 4 detailed sub-scores (0-100)
+    const farmScore = Math.min(100, Math.max(30, Math.round((kills * 3.5 + assists * 2) / Math.max(1, deaths) * 12 + 45)));
+    const survivalScore = Math.max(15, Math.min(100, 100 - (deaths * 9)));
+    const fightScore = Math.min(100, Math.max(25, (kills + assists) * 4 + (isWin ? 20 : 5)));
+    const objectiveScore = Math.min(100, Math.max(30, isWin ? 85 + Math.round(kdaRatioNum * 2) : 40 + Math.round(kdaRatioNum * 2)));
 
-    if (highlights.length === 0) highlights.push(`👍 มีการร่วมมือกับทีมและประพฤติตนเป็นผู้เล่นที่ดีในเกม`);
+    // Timeline Coaching Feedback (0-10m, 10-25m, 25+m)
+    let earlyGameTip = "";
+    let midGameTip = "";
+    let lateGameTip = "";
 
-    if (gradeInfo.deaths >= 7) areasToImprove.push(`⚠️ เสียชีวิตมากถึง <strong>${gradeInfo.deaths} ครั้ง</strong> — ควรระวังการเดินในพื้นที่ไร้วิชั่นป่า และเช็คมินิแมพก่อนเดินออกเลน`);
-    if (gradeInfo.kills + gradeInfo.assists < 5) areasToImprove.push(`🎯 มีส่วนร่วมกับการฆ่าน้อยเกินไป — พยายามพกวาร์ดและเข้าร่วมไฟต์ใหญ่กับทีมทันทีเมื่อได้ไอเทมชิ้นแรก`);
-    if (!isWin) areasToImprove.push(`💔 แมตช์นี้แพ้ — ตรวจสอบไอเทมแก้ทางและจังหวะการดันเลนขึ้นบ้านศัตรูในเกมถัดไป`);
+    if (deaths <= 1) {
+        earlyGameTip = "🟢 <strong>Laning Phase (0-10m):</strong> คุมเลนได้เนียนกริบ ไม่ตายเลย! ควบคุม Creep Equilibrium ได้ดีเยี่ยม";
+    } else if (deaths >= 4) {
+        earlyGameTip = "🔴 <strong>Laning Phase (0-10m):</strong> ตายช่วงต้นเกมบ่อยเกินไป (${deaths} ครั้ง) ควรพก Tango/Salve คืนเลน และหลีกเลี่ยงการเทรดเลือดเมื่อไร้ครีปสนับสนุน";
+    } else {
+        earlyGameTip = "🟡 <strong>Laning Phase (0-10m):</strong> ประสิทธิภาพต้นเกมอยู่ในเกณฑ์มาตรฐาน โฟกัสการ Last Hit และการตอดเลือดศัตรูก่อนถึงเวลารูน";
+    }
 
-    if (areasToImprove.length === 0) areasToImprove.push(`✨ แทบไม่มีจุดบกพร่อง รักษาสมาธิและความต่อเนื่องนี้ไว้เพื่อไต่แร้งก์ในเกมถัดไป!`);
+    if (kills + assists >= 12) {
+        midGameTip = "🟢 <strong>Mid Game (10-25m):</strong> สร้าง Impact ในไฟต์สูงมาก (${kills + assists} K/A) เดินเกมพร้อมไอเทมชิ้นแรกได้อย่างเฉียบคม";
+    } else if (kills + assists < 5) {
+        midGameTip = "🔴 <strong>Mid Game (10-25m):</strong> มีส่วนร่วมกับไฟต์น้อยเกินไป พยายามสื่อสารพก Smoke/TP ช่วยเพื่อนเมื่อได้ Power Spike ไอเทมหลัก";
+    } else {
+        midGameTip = "🟡 <strong>Mid Game (10-25m):</strong> บาลานซ์การฟาร์มและการร่วมไฟต์ได้ดี ควรคุมพื้นที่ป่าศัตรูหลังชนะไฟต์";
+    }
+
+    if (isWin) {
+        lateGameTip = "🟢 <strong>Late Game (25+m):</strong> ควบคุมจังหวะปิดเกมและขึ้นบ้านศัตรูได้สำเร็จ การคุม Buyback และการเอา Aegis ปิดเกมทำได้สมบูรณ์";
+    } else {
+        lateGameTip = "🔴 <strong>Late Game (25+m):</strong> พ่ายแพ้ในช่วงปลายเกม — แนะนำให้เก็บเงินสำรอง Buyback ก่อนเข้าไฟต์ใหญ่ และอย่าพึ่งขึ้น High Ground โดยไม่มี Aegis หรือครีปดันลึก";
+    }
 
     // Award bonus XP for reviewing match
     const xpReward = gradeInfo.grade === 'S+' ? 50 : (gradeInfo.grade === 'S' ? 35 : 20);
     StorageManager.gainXp(xpReward);
 
     modal.innerHTML = `
-        <div class="modal-content card" style="max-width:560px; border:2px solid ${gradeInfo.grade === 'S+' ? '#ffd700' : 'var(--border-color)'}; border-radius:12px; box-shadow: 0 0 35px rgba(0,0,0,0.8);">
-            <div class="card-header" style="background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(15,16,21,0.9)); justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; font-size:18px;"><i class="fa-solid fa-robot gold-text"></i> AI Match Performance Review</h3>
+        <div class="modal-content card" style="max-width:680px; border:2px solid ${gradeInfo.grade === 'S+' ? '#ffd700' : 'var(--cyan)'}; border-radius:12px; box-shadow: 0 0 35px rgba(0,0,0,0.85); max-height:90vh; overflow-y:auto;">
+            <div class="card-header" style="background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; font-size:18px;"><i class="fa-solid fa-chart-pie cyan-text"></i> AI Match Performance Deep Review</h3>
                 <button class="btn-close" id="btn-close-match-review">&times;</button>
             </div>
-            <div class="card-body" style="padding:24px; text-align:center;">
-                <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
-                    <div style="width:85px; height:85px; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; ${gradeInfo.badgeStyle}">
-                        <span style="font-size:32px; line-height:1; font-weight:900;">${gradeInfo.grade}</span>
-                        <span style="font-size:10px; opacity:0.9;">GRADE</span>
+            <div class="card-body" style="padding:22px;">
+                
+                <!-- Grade Summary Badge -->
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:16px; border-radius:10px; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="width:75px; height:75px; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; ${gradeInfo.badgeStyle}">
+                            <span style="font-size:28px; line-height:1; font-weight:900;">${gradeInfo.grade}</span>
+                            <span style="font-size:9px; opacity:0.9;">GRADE</span>
+                        </div>
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <h3 style="margin:0; color:#fff; font-size:20px;">${heroName}</h3>
+                                <span class="badge ${isWin ? 'badge-success' : 'badge-error'}" style="font-size:12px;">${isWin ? 'WIN' : 'LOSE'}</span>
+                            </div>
+                            <p style="margin:4px 0 0; font-size:13px; color:#c0c9d8;">คะแนนประสิทธิภาพ: <strong>${gradeInfo.score} / 100</strong> (${gradeInfo.title})</p>
+                            <p style="margin:2px 0 0; font-size:12px; color:#d4af37;">KDA: <strong>${kills} / ${deaths} / ${assists}</strong> (Ratio: ${gradeInfo.kdaRatio})</p>
+                        </div>
                     </div>
-                    <div style="text-align:left;">
-                        <span class="badge ${isWin ? 'badge-success' : 'badge-error'}" style="font-size:13px;">${isWin ? 'WIN' : 'LOSE'}</span>
-                        <h3 style="margin:4px 0 2px; color:#fff;">${heroName}</h3>
-                        <p style="margin:0; font-size:13px; color:#8e95a5;">คะแนนประสิทธิภาพ: <strong>${gradeInfo.score} / 100</strong> (${gradeInfo.title})</p>
-                        <p style="margin:2px 0 0; font-size:12px; color:#d4af37;">KDA: <strong>${gradeInfo.kills} / ${gradeInfo.deaths} / ${gradeInfo.assists}</strong> (Ratio: ${gradeInfo.kdaRatio})</p>
+                    <div style="text-align:right;">
+                        <span style="font-size:11px; color:#8e95a5;">Match ID: ${m.match_id}</span>
+                        <div style="margin-top:6px;">
+                            <a href="https://www.dotabuff.com/matches/${m.match_id}" target="_blank" class="btn btn-small btn-secondary">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Dotabuff
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-                <div style="text-align:left; background:rgba(0,210,255,0.06); border-left:3px solid var(--cyan); padding:12px 16px; border-radius:6px; margin-bottom:16px;">
-                    <strong class="cyan-text" style="font-size:13px;"><i class="fa-solid fa-star"></i> จุดเด่นในเกมนี้ (Highlights):</strong>
-                    <ul style="margin:6px 0 0; padding-left:18px; font-size:12px; color:#fff; line-height:1.6;">
-                        ${highlights.map(h => `<li>${h}</li>`).join('')}
-                    </ul>
+                <!-- 4 Performance Metric Bars -->
+                <h4 style="margin:0 0 12px; color:#00d2d3;"><i class="fa-solid fa-sliders"></i> 📊 ดัชนีประเมินความสามารถ 4 ด้าน (Performance Breakdown):</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:20px;">
+                    <div style="background:var(--bg-card-hover); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                            <span>🌾 ประสิทธิภาพการฟาร์ม (Farm)</span>
+                            <strong class="cyan-text">${farmScore}%</strong>
+                        </div>
+                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                            <div style="width:${farmScore}%; height:100%; background:var(--cyan);"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--bg-card-hover); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                            <span>🛡️ การเอาชีวิตรอด (Survival)</span>
+                            <strong class="green-text">${survivalScore}%</strong>
+                        </div>
+                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                            <div style="width:${survivalScore}%; height:100%; background:var(--green);"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--bg-card-hover); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                            <span>⚔️ การมีส่วนร่วมไฟต์ (Fight Impact)</span>
+                            <strong class="gold-text">${fightScore}%</strong>
+                        </div>
+                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                            <div style="width:${fightScore}%; height:100%; background:var(--gold);"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--bg-card-hover); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                            <span>🧠 การคุมวัตถุประสงค์เกม (Objectives)</span>
+                            <strong class="crimson-text">${objectiveScore}%</strong>
+                        </div>
+                        <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                            <div style="width:${objectiveScore}%; height:100%; background:var(--crimson);"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="text-align:left; background:rgba(200,35,44,0.06); border-left:3px solid var(--crimson); padding:12px 16px; border-radius:6px; margin-bottom:20px;">
-                    <strong class="crimson-text" style="font-size:13px;"><i class="fa-solid fa-bullseye"></i> คำแนะนำปรับปรุงในเกมถัดไป:</strong>
-                    <ul style="margin:6px 0 0; padding-left:18px; font-size:12px; color:#fff; line-height:1.6;">
-                        ${areasToImprove.map(a => `<li>${a}</li>`).join('')}
-                    </ul>
+                <!-- Timeline Coaching Guidance -->
+                <h4 style="margin:0 0 10px; color:#d4af37;"><i class="fa-solid fa-clock-rotate-left"></i> ⏱️ คำแนะนำเจาะลึก 3 ช่วงเวลา (Timeline Coaching):</h4>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px; font-size:12px; text-align:left;">
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:10px 14px; border-radius:6px;">
+                        ${earlyGameTip}
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:10px 14px; border-radius:6px;">
+                        ${midGameTip}
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:10px 14px; border-radius:6px;">
+                        ${lateGameTip}
+                    </div>
                 </div>
 
-                <div style="background:rgba(212,175,55,0.1); padding:10px; border-radius:6px; border:1px solid rgba(212,175,55,0.3); margin-bottom:16px; font-size:12px; color:#d4af37;">
-                    🎉 รับโบนัส <strong>+${xpReward} XP</strong> สำหรับการทบทวนการเล่นกับ AI Coach!
+                <div style="background:rgba(212,175,55,0.1); padding:10px; border-radius:6px; border:1px solid rgba(212,175,55,0.3); margin-bottom:16px; font-size:12px; color:#d4af37; text-align:center;">
+                    🎉 รับโบนัส <strong>+${xpReward} XP</strong> สำหรับการอ่านวิเคราะห์เจาะลึกกับ AI Coach!
                 </div>
 
                 <div style="display:flex; gap:10px; justify-content:center;">
-                    <a href="https://www.dotabuff.com/matches/${m.match_id}" target="_blank" class="btn btn-secondary">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ดู Dotabuff
-                    </a>
-                    <button class="btn btn-primary" id="btn-close-review-modal-inner">ตกลง (ปิดหน้าต่าง)</button>
+                    <button class="btn btn-primary" id="btn-close-review-modal-inner" style="min-width:140px;">ตกลง (ปิดหน้าต่าง)</button>
                 </div>
             </div>
         </div>
@@ -3125,132 +3201,510 @@ const RANK_ROADMAP_DATABASE = {
         name: "Herald (0 - 760 MMR)",
         badge: "🟤 Herald",
         goal: "ฝึกฝนการควบคุมยูนิตและ Last Hit ครีปพื้นฐาน ไม่แจกฟรี และเลือกฮีโร่ใกล้มือ 1-2 ตัว",
-        skills: [
-            "ฝึกเก็บ Last Hit ให้ได้มากกว่า 40 ตัวใน 10 นาทีแรก",
-            "ใช้สกิลและโจมตีครีปฝั่งศัตรูให้แม่นยำ ไม่ยืนนิ่งกลางเลน",
-            "ห้ามเดินเที่ยวป่าคนเดียวโดยไม่มีครีปดันเลน"
-        ],
-        traps: [
-            "สุ่มเลือกฮีโร่ตัวใหม่ที่ไม่เคยเล่นทุกตา",
-            "วิ่งไปบวกกับศัตรูใต้ป้อมโดยไม่มีครีปฝั่งเราสนับสนุน",
-            "ไม่ยอมซื้อของเพิ่มเลือด (Tango/Healing Salve) คืนเลน"
-        ],
-        heroes: ["Sven", "Viper", "Sniper", "Crystal Maiden", "Wraith King"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "เน้นเก็บ Last Hit ครีปเลนให้ได้มากกว่า 45 ตัวใน 10 นาทีแรก",
+                    "เมื่อเลนอันตรายหรือป้อมแตก ให้ย้ายไปฟาร์มป่าใกล้บ้านทันที",
+                    "ออกไอเทมสปีดฟาร์มชิ้นแรกก่อนเสมอ (เช่น Battle Fury / Maelstrom / Yasha)"
+                ],
+                traps: [
+                    "วิ่งออกไปบวกไฟต์มั่วๆ ตั้งแต่นาทีที่ 5 โดยไม่มีไอเทมหลัก",
+                    "ไม่ยอมพก Tango คืนเลนตอนเลือดต่ำ"
+                ],
+                heroes: ["Sven", "Wraith King", "Juggernaut", "Sniper"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "ฝึกกด Deny ครีปเพื่อตัดเลเวลมิดเลนฝั่งตรงข้าม",
+                    "คุมการเก็บรูนนาทีที่ 6:00 เพื่อนำมาแก๊งเลนข้าง",
+                    "ออกขวด Bottle และพก Town Portal Scroll ตลอดเวลา"
+                ],
+                traps: [
+                    "ยืนแช่เลนกลางไม่ไปไหนแม้เพื่อนเลนข้างโดนกดดันหนัก",
+                    "โดน Stun ใต้ป้อมศัตรูตายฟรี"
+                ],
+                heroes: ["Viper", "Dragon Knight", "Sniper", "Zeus"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "เลือกตัวแทงค์ถึกทนเปิดไฟต์ หรือตัว Stun วงกว้าง",
+                    "กดดันไม่ให้ Pos 1 ศัตรูเก็บ Last Hit ได้สะดวก",
+                    "ออกไอเทมถึกทนค้ำไฟต์ เช่น Vanguard, Pipe, Blade Mail"
+                ],
+                traps: [
+                    "ออกไอเทมดาเมจบริสุทธิ์โดยไม่มีเกราะและ BKB",
+                    "ยืนดันเลนลึกคนเดียวจนโดนซุ่มยิงตาย"
+                ],
+                heroes: ["Axe", "Centaur Warrunner", "Bristleback", "Tidehunter"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "ช่วย Pos 3 ตอดเลือดศัตรูในเลนออฟเลน",
+                    "ซื้อ Sentry Ward มาปักบล็อกป่าครีปตัวใหญ่ศัตรู",
+                    "เดินเก็บรูน Wisdom นาทีที่ 7:00 และ 14:00 ให้ทีม"
+                ],
+                traps: [
+                    "แย่ง Last Hit ครีปของ Pos 3 ในเลน",
+                    "ไม่ยอมซื้อ Ward ช่วยทีม"
+                ],
+                heroes: ["Bounty Hunter", "Ogre Magi", "Hoodwink", "Jakiro"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "ซื้อ Observer & Sentry Wards ปักคุมวิชั่นให้ Pos 1 ฟาร์มปลอดภัย",
+                    "ดึงครีป (Pulling) ครีปป่าตัวเล็กเข้าหาครีปเลนเพื่อดึงระยะคลื่นครีป",
+                    "พก Healing Salve & Tango เติมเลือดให้แครี่ตลอดเวลา"
+                ],
+                traps: [
+                    "เดินไปโดนศัตรู Stun ตายฟรีนอกวิชั่น",
+                    "ปล่อยให้แครี่โดนรุม 2v1 โดยไม่ช่วยโซนศัตรู"
+                ],
+                heroes: ["Crystal Maiden", "Witch Doctor", "Lion", "Shadow Shaman"]
+            }
+        },
         mindset: "โฟกัสที่การเก็บบอร์ดเงินและการไม่ตาย เลนชนะง่ายๆ ด้วยการเก็บ Last Hit มากกว่าศัตรู"
     },
     "Guardian": {
         name: "Guardian (770 - 1,530 MMR)",
         badge: "⚪ Guardian",
         goal: "เข้าใจหน้าที่ของสายอาชีพ (Positions 1-5) และรู้จักเวลาเกิดของรูนและบอสในแผนที่",
-        skills: [
-            "ซัพพอร์ต: ซื้อ Observer Ward และ Sentry Ward ปักคุมพื้นที่เลนและถ้ำ Roshan",
-            "คอร์/แครี่: สลับไปฟาร์มป่าใกล้ๆ เมื่อเลนอันตราย ดันเลนเซฟเพื่อสร้างพื้นที่",
-            "เช็คไอเทมของศัตรูในเลนเสมอ (กดดูว่ามี Wand หรือ Blink หรือไม่)"
-        ],
-        traps: [
-            "แช่ฟาร์มป่าลึกคนเดียวขณะที่ทีมกำลังโดนดันป้อม 3",
-            "ซื้อไอเทมดาเมจบริสุทธิ์โดยไม่ซื้อ BKB กันดิสเอเบิล",
-            "ก่นด่าเพื่อนร่วมทีมเมื่อเปิดไฟต์เสียเปรียบ (Tilt)"
-        ],
-        heroes: ["Juggernaut", "Dragon Knight", "Axe", "Lion", "Witch Doctor"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "ดันคลื่นครีปในเลนเซฟเข้าป้อมศัตรูก่อนสลับไปฟาร์มป่า",
+                    "มองมินิแมพทุก 5 วินาที หากฮีโร่ศัตรูหายหน้า ให้ย้ายไปฟาร์มป่าลึก",
+                    "ออกไอเทมกันดิสเอเบิล Black King Bar (BKB) ชิ้นที่ 2 หรือ 3 เสมอ"
+                ],
+                traps: [
+                    "ฟาร์มป่าลึกคนเดียวขณะที่ป้อม 3 ฝั่งเรากำลังโดนตี",
+                    "ซื้อไอเทมดาเมจล้วนโดยไม่ซื้อ BKB"
+                ],
+                heroes: ["Juggernaut", "Phantom Assassin", "Sven", "Luna"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "ดันคลื่นครีปเลนกลางให้ไวทุกนาทีเลขคูณ 2 เพื่อไปเก็บรูน",
+                    "วาร์ปช่วยเลนข้างทันทีเมื่อศัตรูดันลึกใต้ป้อมเรา",
+                    "ออกไอเทมเคลื่อนที่ไว Blink Dagger หรือ Dragon Lance"
+                ],
+                traps: [
+                    "ไม่สื่อสารเมื่อมิดเลนศัตรูเดินหายไปแก๊งเลนอื่น",
+                    "ใช้สกิลอัลติเมตใส่ครีป"
+                ],
+                heroes: ["Shadow Fiend", "Queen of Pain", "Storm Spirit", "Puck"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "พังป้อม 1 ของแครี่ศัตรูให้ได้ก่อนนาทีที่ 12",
+                    "คุมพื้นที่ป่าฝั่งศัตรูเพื่อจำกัดพื้นที่ฟาร์มของแครี่ศัตรู",
+                    "เป็นตัวเปิดไฟต์หลัก ชี้เป้าหมายให้ทีม"
+                ],
+                traps: [
+                    "ปล่อยให้แครี่ศัตรูฟาร์มสบายโดยไม่เดินไปกวน",
+                    "ไม่ซื้อ Blink Dagger สำหรับฮีโร่ตัวเปิด"
+                ],
+                heroes: ["Axe", "Slardar", "Mars", "Centaur Warrunner"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "ซุ่มวาร์ปไปแก๊งเลนกลางตอนนาทีที่ 4:00 หรือ 6:00",
+                    "ปัก Dust / Sentry วาร์ดล่วงหน้าเมื่อสู้กับฮีโร่ล่องหน",
+                    "ออกไอเทมช่วยทีม ยูทิลิตี้ เช่น Force Staff หรือ Eul's"
+                ],
+                traps: [
+                    "ยืนนิ่งหลัง Pos 3 โดยไม่ตอดเลือดศัตรู",
+                    "เดินแจกฟรีช่วงกลางเกม"
+                ],
+                heroes: ["Rubick", "Tusk", "Earthshaker", "Mirana"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "ปักวิชั่น Guarding Wards คุมถ้ำ Roshan และเนินสูง",
+                    "ยืนตำแหน่งแนวหลังไฟต์เพื่อปล่อยสกิล Stun / ฮีลช่วยทีม",
+                    "สละชีวิตเซฟ Pos 1 หากจำเป็นในการปะทะ"
+                ],
+                traps: [
+                    "เดินไปเดินมาโดยไม่มีวัตถุประสงค์",
+                    "ปัก Ward ที่เดิมซ้ำๆ จนโดน Deward"
+                ],
+                heroes: ["Jakiro", "Lich", "Oracle", "Disruptor"]
+            }
+        },
         mindset: "การสร้างความได้เปรียบเกิดจากการคุมพื้นที่ป้อมและรูน ไม่ใช่การเดินไล่คิลคนเดียว"
     },
     "Crusader": {
         name: "Crusader (1,540 - 2,300 MMR)",
         badge: "🟤 Crusader",
         goal: "การอ่านมินิแมพ (Map Awareness) และการออกไอเทมแก้ทาง (Counter Items)",
-        skills: [
-            "กวาดสายตามองมินิแมพทุกๆ 5 วินาทีเมื่อครีปชนกัน",
-            "ออกไอเทมแก้ทางทันเวลา: Spirit Vessel (vs Regen), BKB (vs Stun), MKB (vs Evasion)",
-            "ซัพพอร์ต: เดินแก๊งช่วยเหลือเลนกลางและดึงรูน Wisdom ตอนนาที 7:00/14:00"
-        ],
-        traps: [
-            "ออกไอเทมตามบิลด์เดิมเหมือนกันทุกเกมโดยไม่ดูฮีโร่ศัตรู",
-            "ไม่ยอมพกวาร์ด/ทาวเวอร์วาร์ดเข้าปะทะกับฮีโร่ล่องหน (Riki/Bounty/Shadow Blade)",
-            "ไฟต์ชนะแล้ววิ่งกลับไปฟาร์มป่าแทนที่จะขึ้นดันป้อมหรือตี Roshan"
-        ],
-        heroes: ["Phantom Assassin", "Shadow Fiend", "Slardar", "Hoodwink", "Jakiro"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "คุม Dead Lane: รู้จักหลีกเลี่ยงเลนอันตรายและดันเฉพาะเลนปลอดภัย",
+                    "ออกไอเทมแก้ทางทันที เช่น MKB (แก้ Evasion), Vessel/Skadi (แก้ Regen)",
+                    "ร่วมไฟต์เมื่อมีอัลติเมตหรือ BKB พร้อมเท่านั้น"
+                ],
+                traps: [
+                    "ออกไอเทมตามบิลด์เดิมเหมือนกันทุกเกมโดยไม่ดูฮีโร่ศัตรู",
+                    "ไฟต์ชนะแล้ววิ่งกลับไปฟาร์มป่าแทนที่จะขึ้นดันป้อม"
+                ],
+                heroes: ["Phantom Assassin", "Anti-Mage", "Slark", "Ursa"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "สร้าง Map Pressure บังคับให้ศัตรูต้องวาร์ปมากันเลน",
+                    "สื่อสารใช้ Smoke of Deceit ร่วมกับซัพพอร์ตเพื่อซุ่มคิลตัวคีย์",
+                    "คํานวณ Power Spike ของไอเทมชิ้นแรกแล้วเดินเกมทันที"
+                ],
+                traps: [
+                    "โดน Solo Kill ในเลนกลาง",
+                    "ไม่พกคบเพลิง Dust เมื่อศัตรูพก Shadow Blade"
+                ],
+                heroes: ["Invoker", "Ember Spirit", "Void Spirit", "Templar Assassin"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "ตัดคลื่นครีป (Creep Skipping) เมื่อเลนเสียเปรียบ",
+                    "ออก Pipe of Insight / Crimson Guard คุ้มกันทีมในไฟต์ใหญ่",
+                    "คุมพื้นที่ถ้ำ Roshan ก่อนเวลาเกิด"
+                ],
+                traps: [
+                    "เปิดไฟต์ในจุดที่ไม่มีวิชั่นของทีม",
+                    "ซื้อของดาเมจล้วนแต่ตายใน 2 วินาที"
+                ],
+                heroes: ["Beastmaster", "Brewmaster", "Viper", "Doom"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "Stack ครีปป่า 2-3 แคมป์ให้ Pos 1 และ Pos 2 ฟาร์ม",
+                    "ออกไอเทมแก้ทางเวท Mage Slayer / Spirit Vessel",
+                    "คุมวิชั่นเนินสูง High Ground"
+                ],
+                traps: [
+                    "แช่ฟาร์มเอาของตัวเองจนไม่เดินเกมกับทีม",
+                    "ซื้อของเลทเกมช้าเกินไป"
+                ],
+                heroes: ["Hoodwink", "Clockwerk", "Nyx Assassin", "Pugna"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "สื่อสารคอลเวลาเกิดของรูน Wisdom (7m/14m/21m)",
+                    "ออก Glimmer Cape / Solar Crest ช่วยคอร์ในไฟต์",
+                    "ซื้อ Sentry Ward เคลียร์วิชั่นศัตรูรอบถ้ำ Roshan"
+                ],
+                traps: [
+                    "ยืนใกล้คอร์เกินไปจนโดนสกิลหมู่ตายคู่",
+                    "เก็บเงินไม่ซื้อเกิด (Buyback)"
+                ],
+                heroes: ["Treant Protector", "Shadow Demon", "AA (Ancient Apparition)", "Dazzle"]
+            }
+        },
         mindset: "ชัยชนะในระดับ Crusader เกิดจากการคุมมินิแมพและการปิดเกมเมื่อชนะไฟต์"
     },
     "Archon": {
         name: "Archon (2,310 - 3,070 MMR)",
         badge: "👑 Archon",
         goal: "การคุมจังหวะไฟต์ (Fight Positioning) และการดึงแผนที่ (Split Push & Space Creation)",
-        skills: [
-            "ยืนตำแหน่งให้ปลอดภัย: แครี่/มิดรอตัว Stun ศัตรูเปิดก่อนค่อยเข้าตาม",
-            "การคุม Dead Lane: รู้ว่าเลนไหนอันตราย ห้ามเดินไปตายฟรี",
-            "การบริหารเงิน Buyback: เก็บเงินสำรองซื้อเกิดไว้เสมอในนาทีที่ 30+"
-        ],
-        traps: [
-            "วิ่งไปไฟต์ตามเพื่อนในจุดที่ไม่มีวิชั่นและไม่มีป้อมสนับสนุน (Bad Fights)",
-            "ตายฟรีช่วงเลทเกมเพราะไม่มีเงิน Buyback",
-            "ใช้สกิลใหญ่/อัลติเมตใส่ตัวแทงค์ฝั่งศัตรูแทนที่จะเก็บไว้ใส่ตัวคีย์หลัก"
-        ],
-        heroes: ["Invoker", "Anti-Mage", "Centaur Warrunner", "Rubick", "Bane"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "บริหารเงิน Buyback: เก็บเงินสำรองซื้อเกิดไว้เสมอในนาทีที่ 30+",
+                    "ยืนตำแหน่งแนวหลัง รอตัว Stun ศัตรูเปิดก่อนค่อย Blink เข้าตาม",
+                    "คุมการดันคลื่นครีป 2 เลนพร้อมกันก่อนขึ้นดันป้อม 3"
+                ],
+                traps: [
+                    "วิ่งไปไฟต์ตามเพื่อนในจุดที่ไม่มีวิชั่น (Bad Fights)",
+                    "ตายฟรีเลทเกมเพราะไม่มีเงิน Buyback"
+                ],
+                heroes: ["Anti-Mage", "Morphling", "Faceless Void", "Sven"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "Shotcall จังหวะบุกป่าศัตรูเมื่อศัตรูเสียสกิลใหญ่",
+                    "เลือกเป้าหมายแนวหลัง (Pos 4/5 หรือ Glass Cannon) ในไฟต์ก่อนเสมอ",
+                    "ดึงจังหวะ Split Push เมื่อทีมเสียเปรียบ"
+                ],
+                traps: [
+                    "ใช้สกิลใหญ่ใส่ตัวแทงค์ถึกศัตรูแทนที่จะเก็บไว้ใส่ตัวคีย์",
+                    "หัวร้อนตามเกมศัตรู"
+                ],
+                heroes: ["Invoker", "Storm Spirit", "Puck", "Kunkka"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "เป็นผู้นำสั่ง Smoke Gank ยึดพื้นที่ป่าศัตรู",
+                    "คํานวณ Buyback สวนกลับเมื่อศัตรูบุกขึ้นบ้าน",
+                    "ออก Blink + BKB/Lotus Orb เปิดไฟต์แบบไม่ตายฟรี"
+                ],
+                traps: [
+                    "เปิดไฟต์ขณะที่แครี่ฝั่งเรายังอยู่ไกล",
+                    "ไม่ยอมสื่อสารกับซัพพอร์ต"
+                ],
+                heroes: ["Centaur Warrunner", "Legion Commander", "Slardar", "Axe"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "ควบคุมวิชั่นล่วงหน้า 1 นาทีก่อนไฟต์ Roshan",
+                    "ออก Force Staff / Eul's ตัดคอมโบสกิลศัตรู",
+                    "ดึงจังหวะให้ศัตรูเสียสกิลฟรี"
+                ],
+                traps: [
+                    "แจกฟรีให้แครี่ศัตรูฟาร์มง่าย",
+                    "ไม่พก Dust คืนเลน"
+                ],
+                heroes: ["Rubick", "Grimstroke", "Earth Spirit", "Mirana"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "ยืนซ่อนในทรีไลน์ (Tree Line) ปล่อยสกิลคุมไฟต์โดยไม่ให้ศัตรูเห็นตัว",
+                    "ซื้อ Aghanim Shard ช่วยเพิ่มยูทิลิตี้คุมเกม",
+                    "บริหาร Sentry เคลียร์วิชั่นศัตรูแบบ 100%"
+                ],
+                traps: [
+                    "ยืนเปิดหน้าให้ศัตรู Blink มาคิลตัวแรก",
+                    "ไม่ยอมเก็บเงิน Buyback เลทเกม"
+                ],
+                heroes: ["Bane", "Disruptor", "Witch Doctor", "Warlock"]
+            }
+        },
         mindset: "เล่นตามจังหวะวิชั่นและคุมบอร์ดเกม ห้ามเข้าปะทะหากไม่เห็นตัวคีย์หลักของศัตรูบนแมพ"
     },
     "Legend": {
         name: "Legend (3,080 - 3,840 MMR)",
         badge: "💎 Legend",
         goal: "การอ่านเกมล่วงหน้า (Draft Synergies & Smoke Gank Execution)",
-        skills: [
-            "กดใช้ Smoke of Deceit สื่อสารทีมเดินแก๊งคิลตัวคีย์ศัตรูก่อนเวลา Roshan/Tormentor",
-            "เลือกฮีโร่ที่มี Synergy กับเพื่อนและกดดันจังหวะคุมเลนใน Pick Phase",
-            "การสลับเลนและคุมไฟต์รอบถ้ำ Roshan เพื่อเอา Aegis ขึ้น High Ground"
-        ],
-        traps: [
-            "ปล่อยให้ศัตรูได้ Aegis ฟรีโดยไม่พยายามปักวิชั่นหรือรบกวน",
-            "ขึ้นดัน High Ground โดยไม่มีครีปดันลึกหรือไม่มีตัวเปิด",
-            "สื่อสารเชิงลบจนทีมเสียสมาธิในการเล่น"
-        ],
-        heroes: ["Morphling", "Storm Spirit", "Doom", "Puck", "Oracle"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "เล่นตาม Item Power Spikes (เช่น ได้ BKB ปุ๊บ ต้องสั่งคอลทีมเดินไฟต์ทันที)",
+                    "การฟาร์มแบบ Triangle Pattern สลับดันคลื่นครีปอย่างปลอดภัย",
+                    "การตัดสินใจระหว่างการลุยไฟต์กับการแยกดันบ้าน (Rat Doto)"
+                ],
+                traps: [
+                    "ฟาร์มเพลินหลังได้ Item Power Spike จนเสียโอกาสดันเกม",
+                    "ประมาทขึ้น High Ground โดยไม่มี Aegis"
+                ],
+                heroes: ["Morphling", "Terrorblade", "Naga Siren", "Faceless Void"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "ควบคุม Rune Timings 2m/4m/6m/8m ร่วมกับซัพพอร์ตแบบ 100%",
+                    "การดึงจังหวะ Cooldown Spikes ของศัตรูมาสร้างการคิล",
+                    "เลือกฮีโร่ที่มี Synergy กับออฟเลนและแครี่"
+                ],
+                traps: [
+                    "ตายเสียจังหวะขณะคุมวิชั่นป่าศัตรู",
+                    "ไม่ปรับการออกไอเทมตามสถานการณ์"
+                ],
+                heroes: ["Puck", "Ember Spirit", "Void Spirit", "Tinker"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "ยึด Dead Lane และเปลี่ยนพื้นที่ป่าศัตรูให้เป็นเขตปลอดภัยของทีมเรา",
+                    "ออก Aura Items คุ้มกันทีม 5v5 (Pipe, Crimson, Greaves)",
+                    "Shotcall การตี Roshan ครั้งที่ 1 และ 2"
+                ],
+                traps: [
+                    "เข้าไฟต์คนเดียวโดยเพื่อนร่วมทีมไม่พร้อมตาม",
+                    "ซื้อของคอร์แต่ไม่ทำหน้าที่แทงค์"
+                ],
+                heroes: ["Doom", "Beastmaster", "Lycan", "Dawnbreaker"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "เดินคุมวิชั่นรอบถ้ำ Roshan ล่วงหน้า 2 นาที",
+                    "ซุ่มเกลียดตัดจังหวะการ Blink ของคอร์ศัตรู",
+                    "บริหารเงินซื้อ Sentry Deward คืนทุน"
+                ],
+                traps: [
+                    "ไม่สื่อสารแผนการ Smoke เดินเกมให้ทีมทราบ",
+                    "ปล่อยให้ศัตรูซุ่มปัก Ward ฟรี"
+                ],
+                heroes: ["Batrider", "Tusk", "Nyx Assassin", "Shadow Demon"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "อ่านการเดินของมิดและซัพพอร์ตศัตรูจากมินิแมพใน 3 วินาที",
+                    "การวาง Position ในทรีไลน์เพื่อร่ายสกิลใหญ่ไม่ให้โดนขัด",
+                    "การคํานวณ Buyback สวนกลับบุกบ้าน"
+                ],
+                traps: [
+                    "โดนจับตัวแรกในไฟต์สำคัญ",
+                    "ไม่สื่อสารสั่งเพื่อนถอย"
+                ],
+                heroes: ["Oracle", "Chen", "Shadow Shaman", "Ancient Apparition"]
+            }
+        },
         mindset: "การตัดสินใจในระดับ Legend ต้องเกิดจากการคาดการณ์ล่วงหน้า 1-2 นาที"
     },
     "Ancient": {
         name: "Ancient (3,850 - 4,610 MMR)",
         badge: "🛡️ Ancient",
         goal: "การคุมทรัพยากรระดับสูง (Wave Management & Power Spikes)",
-        skills: [
-            "เดินเกมตาม Power Spike ของไอเทมหลัก (เช่น ได้ BKB/Blink ปุ๊บ ต้องเดินไฟต์ทันที)",
-            "การดึงจังหวะ Creep Equilibrium และการบล็อกป่าศัตรูด้วย Sentry",
-            "การคํานวณ Buyback สวนกลับเมื่อศัตรูบุกขึ้นบ้าน"
-        ],
-        traps: [
-            "ฟาร์มเพลินหลังได้ Item Power Spike จนเสียโอกาสเดินเกม",
-            "ไม่ยอมสื่อสารแผนการเล่นให้เพื่อนร่วมทีมทราบก่อนเริ่มปะทะ"
-        ],
-        heroes: ["Templar Assassin", "Ember Spirit", "Beastmaster", "Chen", "Grimstroke"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "การอ่าน Wave Equilibrium และดันเลนลึกเพื่อบีบให้ศัตรูวาร์ปมากันแล้วตามไปรุมไฟต์ 5v4",
+                    "การบริหารพื้นที่และเวลามืออาชีพ ไร้การเดินเสียเวลาเปล่า",
+                    "การโฟกัสตัวคีย์หลักในไฟต์ใหญ่แบบไม่เสียสมาธิ"
+                ],
+                traps: [
+                    "โดนดักซุ่มคิลขณะแยกดันเลนลึกโดยไม่มีวิชั่น",
+                    "ใช้ BKB เร็วเกินไปในไฟต์"
+                ],
+                heroes: ["Templar Assassin", "Sven", "Lifestealer", "Medusa"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "การคุมจังหวะ Solo Kills และการตัดพื้นที่ฟาร์มแครี่ศัตรู 100%",
+                    "การสร้าง Space และการหลบสกิลสำคัญด้วยปฏิกิริยารวดเร็ว",
+                    "การเป็นมิดเลนตัวคุมจังหวะไฟต์หลัก"
+                ],
+                traps: [
+                    "ประมาทโดน Stun คอมโบตายโดยไม่ได้ใช้ BKB",
+                    "สื่อสารกับทีมไม่ชัดเจน"
+                ],
+                heroes: ["Storm Spirit", "Invoker", "Pangolier", "Kunkka"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "การกดดันครีปเลนจนแครี่ศัตรูต้องเข้าป่าตั้งแต่นาทีที่ 6",
+                    "การคุมไฟต์ Roshan เอา Aegis ขึ้น High Ground แบบ 100% Winrate Pattern",
+                    "การคํานวณ Buyback Counter Push"
+                ],
+                traps: [
+                    "หลุดตำแหน่งไฟต์เปิดโอกาสให้ศัตรูพลิกเกม",
+                    "ไม่ยอมออกไอเทมแก้ทาง"
+                ],
+                heroes: ["Beastmaster", "Enigma", "Tidehunter", "Mars"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "การสร้างความได้เปรียบ 2v1 ในเลนและเดินคุมวิชั่นรวดเร็ว",
+                    "การใช้ Skill Cancelling ตัดจังหวะการวาร์ปและ Blink ศัตรู",
+                    "การเป็นตัวคอล Smoke Gank ประจำทีม"
+                ],
+                traps: [
+                    "ตายฟรีจากการเดินปักวิชั่นคนเดียวลึกเกินไป",
+                    "แจกโกลด์ให้ศัตรูช่วงเลทเกม"
+                ],
+                heroes: ["Earth Spirit", "Mirana", "Rubick", "Hoodwink"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "การควบคุม Map Vision ระดับท็อป ปัก Ward ในจุดที่ศัตรูคาดไม่ถึง",
+                    "การร่ายสกิลเซฟคอร์ในเสี้ยววินาที (Save Execution)",
+                    "การบริหารโกลด์ซื้อไอเทมซัพพอร์ตครบชุด"
+                ],
+                traps: [
+                    "ยืนหลุดตำแหน่งให้ศัตรูจับได้เป็นตัวแรก",
+                    "สื่อสารเชิงลบเมื่อทีมเสียเปรียบ"
+                ],
+                heroes: ["Grimstroke", "Shadow Demon", "Disruptor", "Jakiro"]
+            }
+        },
         mindset: "ใช้ประโยชน์จาก Power Spike และวิชั่นเพื่อบังคับให้ศัตรูต้องเล่นในพื้นที่เสียเปรียบ"
     },
     "Divine": {
         name: "Divine (4,620 - 5,419 MMR)",
         badge: "⚔️ Divine",
         goal: "การเล่นแบบไร้ข้อผิดพลาด (Minimizing Execution Errors & Macro Control)",
-        skills: [
-            "การอ่านการเดินของมิดเลนและซัพพอร์ตศัตรูจากลักษณะการดันเลน",
-            "การหลบสกิลและการใช้สกิลขัดจังหวะด้วยเฟรมปฏิกิริยารวดเร็ว",
-            "การควบคุมแมพ 100% จนศัตรูติดอยู่แต่ในบ้าน"
-        ],
-        traps: [
-            "ประมาทศัตรูช่วงเลทเกมจนโดนสวนกลับ (Throwing High Ground Advantage)",
-            "ไม่ปรับแผนเมื่อโดนแก้ทางไอเทม"
-        ],
-        heroes: ["Meepo", "Tinker", "Lone Druid", "Batrider", "Earth Spirit"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "การเล่นระดับไร้ข้อผิดพลาด (Zero Execution Error) ในการ Last Hit และเข้าไฟต์",
+                    "การคํานวณ Buyback สวนกลับ High Ground 100%",
+                    "การอ่านวิชั่นศัตรูจากพฤติกรรมฮีโร่บนมินิแมพ"
+                ],
+                traps: ["ประมาทศัตรูช่วงเลทเกมจนโดนสวนกลับ"],
+                heroes: ["Morphling", "Lone Druid", "Anti-Mage", "Ursa"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "การคุมเลนและดึงข้อได้เปรียบระดับสูงใน Pick Phase",
+                    "การเปิดจังหวะไฟต์ทำลายรูปขบวนศัตรู",
+                    "ความแม่นยำในการกดสกิลระดับเฟรม"
+                ],
+                traps: ["ไม่ปรับแผนเมื่อโดนแก้ทางไอเทม"],
+                heroes: ["Meepo", "Tinker", "Invoker", "Ember Spirit"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "การควบคุมแมพ 100% ขังศัตรูไว้แต่ในบ้าน",
+                    "การสร้างความกดดันเลนไร้ขีดจำกัด",
+                    "การทำลายจังหวะไฟต์ศัตรู"
+                ],
+                traps: ["เข้าไฟต์เสียจังหวะ"],
+                heroes: ["Doom", "Beastmaster", "Centaur Warrunner", "Dark Seer"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "การเป็น Playmaker คุมเกมระดับโลก",
+                    "การ Deward อ่านวิชั่นศัตรู 100%",
+                    "การช่วยเหลือทุกเลนใน 5 นาทีแรก"
+                ],
+                traps: ["เดินแจกฟรีช่วงเลทเกม"],
+                heroes: ["Batrider", "Earth Spirit", "Tusk", "Nyx Assassin"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "การเป็น Shotcaller หลักของทีม",
+                    "การเซฟคอร์จากการโดน One-shot",
+                    "การควบคุมจิตใจและสมาธิของทีม"
+                ],
+                traps: ["ขาดสมาธิในไฟต์สำคัญ"],
+                heroes: ["Oracle", "Chen", "Shadow Demon", "Bane"]
+            }
+        },
         mindset: "รักษาระดับสมาธิและความต่อเนื่อง ไร้ข้อผิดพลาดในการกดปุ่มและอ่านแผนที่"
     },
     "Immortal": {
         name: "Immortal (5,420+ MMR)",
         badge: "🌟 Immortal Top Leaderboard",
         goal: "การเป็นผู้นำทีม อ่านแมตช์การแข่งขันระดับมืออาชีพ และปรับตัวตามแพตช์ทันที",
-        skills: [
-            "การเป็น Shotcaller สั่งการยึดพื้นที่และกำหนดจุดไฟต์ให้ทีม 5 คน",
-            "ความเข้าใจลึกซึ้งในระบบเกราะ ดาเมจ และการกระจายดาเมจระดับท็อป",
-            "ความคงเส้นคงวาและสภาวะอารมณ์ไร้ขีดจำกัด (Peak Mental Strength)"
-        ],
-        traps: [
-            "ยึดติดกับความคิดตัวเองโดยไม่รับฟังคอลของเพื่อนร่วมทีม"
-        ],
-        heroes: ["Pangolier", "Spirit Breaker", "Nature's Prophet", "Kez", "Tusk"],
+        roles: {
+            "Pos 1 (Carry)": {
+                skills: [
+                    "ระดับการเล่น Pro Player Level: คุมแมพ คุมจังหวะไฟต์ และปิดเกมไร้ที่ติ",
+                    "การสื่อสารสั่งการทีมยึดพื้นที่แมพ 100%",
+                    "ความคงเส้นคงวาและจิตใจระดับ Peak Strength"
+                ],
+                traps: ["ยึดติดกับความคิดตัวเองโดยไม่ฟังทีม"],
+                heroes: ["Morphling", "Kez", "Slark", "Juggernaut"]
+            },
+            "Pos 2 (Mid)": {
+                skills: [
+                    "การสร้างความได้เปรียบเลนกลางและการคอลไฟต์ชี้ขาด",
+                    "การอ่านการเคลื่อนไหวศัตรูล่วงหน้า 3 นาที"
+                ],
+                traps: ["หัวร้อนกับเพื่อนร่วมทีม"],
+                heroes: ["Pangolier", "Puck", "Storm Spirit", "Invoker"]
+            },
+            "Pos 3 (Offlane)": {
+                skills: [
+                    "การเป็นออฟเลนยึดแมพและคุมถ้ำ Roshan แบบ 100% Perfection",
+                    "การเป็นแทงค์และตัวเปิดไฟต์ระดับท็อป"
+                ],
+                traps: ["เข้าไฟต์โดยไร้วิชั่น"],
+                heroes: ["Beastmaster", "Doom", "Spirit Breaker", "Mars"]
+            },
+            "Pos 4 (Soft Support)": {
+                skills: [
+                    "การคุมจังหวะ Smoke Gank และ Deward ทั่วแผนที่",
+                    "การปั่นป่วนเลนศัตรูตั้งแต่นาทีแรก"
+                ],
+                traps: ["ประมาทนอกป้อม"],
+                heroes: ["Nature's Prophet", "Tusk", "Hoodwink", "Rubick"]
+            },
+            "Pos 5 (Hard Support)": {
+                skills: [
+                    "การเป็น Captain Shotcaller สั่งแผนบุก-ถอย-ตี Roshan",
+                    "การคุมวิชั่นและตำแหน่งปลอดภัยในไฟต์ใหญ่"
+                ],
+                traps: ["สื่อสารไม่ชัดเจน"],
+                heroes: ["Chen", "Enchantress", "Grimstroke", "Disruptor"]
+            }
+        },
         mindset: "ท็อปของตารางตักตวงทุกความผิดพลาดของศัตรูมาเปลี่ยนเป็นชัยชนะ"
     }
 };
@@ -3260,6 +3714,7 @@ function initRankGuide() {
     const contentContainer = document.getElementById('rankguide-content-container');
     const currentTierHeader = document.getElementById('rankguide-current-tier');
     const currentDescHeader = document.getElementById('rankguide-current-desc');
+    const roleBtns = document.querySelectorAll('#rankguide-role-selector button');
 
     if (!selectorContainer || !contentContainer) return;
 
@@ -3276,6 +3731,16 @@ function initRankGuide() {
     const ranks = Object.keys(RANK_ROADMAP_DATABASE);
     let selectedRank = currentRankInfo.tier ? currentRankInfo.tier.split(' ')[0] : 'Archon';
     if (!RANK_ROADMAP_DATABASE[selectedRank]) selectedRank = "Archon";
+    let selectedRole = "Pos 1 (Carry)";
+
+    roleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            roleBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedRole = btn.getAttribute('data-roadmap-role');
+            renderRankDetails(selectedRank, selectedRole);
+        });
+    });
 
     const renderSelectorButtons = () => {
         selectorContainer.innerHTML = '';
@@ -3289,31 +3754,38 @@ function initRankGuide() {
             btn.addEventListener('click', () => {
                 selectedRank = r;
                 renderSelectorButtons();
-                renderRankDetails(r);
+                renderRankDetails(r, selectedRole);
             });
             selectorContainer.appendChild(btn);
         });
     };
 
-    const renderRankDetails = (rankKey) => {
+    const renderRankDetails = (rankKey, roleKey) => {
         const data = RANK_ROADMAP_DATABASE[rankKey];
         if (!data) return;
+
+        const roleData = (data.roles && data.roles[roleKey]) ? data.roles[roleKey] : {
+            skills: data.skills || [],
+            traps: data.traps || [],
+            heroes: data.heroes || []
+        };
 
         contentContainer.innerHTML = `
             <div class="grid-layout mb-20">
                 <div class="card card-span-2">
-                    <div class="card-header" style="background:rgba(212,175,55,0.08); border-bottom:1px solid rgba(212,175,55,0.2);">
-                        <h3><i class="fa-solid fa-bullseye gold-text"></i> ${data.name} — เป้าหมายและทักษะที่ต้อง Master</h3>
+                    <div class="card-header" style="background:rgba(212,175,55,0.08); border-bottom:1px solid rgba(212,175,55,0.2); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <h3 style="margin:0;"><i class="fa-solid fa-bullseye gold-text"></i> ${data.name} — ${roleKey} Roadmap</h3>
+                        <span class="badge badge-primary" style="font-size:12px;"><i class="fa-solid fa-user-ninja"></i> ${roleKey}</span>
                     </div>
                     <div class="card-body" style="padding:20px;">
                         <div style="background:rgba(0,210,255,0.06); border-left:3px solid var(--cyan); padding:12px 16px; border-radius:6px; margin-bottom:16px;">
-                            <strong class="cyan-text"><i class="fa-solid fa-flag"></i> เป้าหมายหลักในการผ่านแร้งก์นี้:</strong>
+                            <strong class="cyan-text"><i class="fa-solid fa-flag"></i> เป้าหมายหลักประจำแร้งก์:</strong>
                             <p style="margin:4px 0 0; color:#fff; font-size:14px;">${data.goal}</p>
                         </div>
 
-                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-check-double green-text"></i> 3 ทักษะที่ต้องฝึกฝนให้เชี่ยวชาญ:</h4>
+                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-check-double green-text"></i> 3 ทักษะของ ${roleKey} ที่ต้อง Master ในแร้งก์นี้:</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                            ${data.skills.map(s => `
+                            ${roleData.skills.map(s => `
                                 <div style="background:var(--bg-card-hover); padding:10px 14px; border-radius:6px; border:1px solid var(--border-color); font-size:13px; display:flex; align-items:center; gap:10px;">
                                     <i class="fa-solid fa-circle-check green-text"></i>
                                     <span>${s}</span>
@@ -3321,9 +3793,9 @@ function initRankGuide() {
                             `).join('')}
                         </div>
 
-                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation crimson-text"></i> ข้อผิดพลาดคลาสสิกที่ทำให้ติดหล่ม:</h4>
+                        <h4 style="margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation crimson-text"></i> ข้อผิดพลาดคลาสสิกของ ${roleKey} ที่ทำให้ติดหล่ม:</h4>
                         <div style="display:flex; flex-direction:column; gap:8px;">
-                            ${data.traps.map(t => `
+                            ${roleData.traps.map(t => `
                                 <div style="background:rgba(200,35,44,0.06); padding:10px 14px; border-radius:6px; border-left:2px solid var(--crimson); font-size:13px; display:flex; align-items:center; gap:10px;">
                                     <i class="fa-solid fa-xmark crimson-text"></i>
                                     <span>${t}</span>
@@ -3335,12 +3807,12 @@ function initRankGuide() {
 
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fa-solid fa-crown gold-text"></i> ฮีโร่พาไต่แร้งก์ ${rankKey}</h3>
+                        <h3><i class="fa-solid fa-crown gold-text"></i> ฮีโร่ ${roleKey} แนะนำพาไต่ ${rankKey}</h3>
                     </div>
                     <div class="card-body" style="padding:18px;">
-                        <p style="font-size:12px; color:#8e95a5; margin-top:0; margin-bottom:12px;">ฮีโร่ที่มีสถิติชนะสูงสุดและเล่นง่ายในแร้งก์นี้:</p>
+                        <p style="font-size:12px; color:#8e95a5; margin-top:0; margin-bottom:12px;">ฮีโร่ตำแหน่ง ${roleKey} ที่ได้เปรียบและพาขึ้นแร้งก์ง่ายที่สุด:</p>
                         <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
-                            ${data.heroes.map(h => `
+                            ${roleData.heroes.map(h => `
                                 <button class="btn btn-small btn-secondary btn-view-build" data-hero="${h}" style="border-color:rgba(212,175,55,0.4); color:#d4af37;">
                                     <i class="fa-solid fa-scroll"></i> ${h}
                                 </button>
@@ -3365,7 +3837,7 @@ function initRankGuide() {
     };
 
     renderSelectorButtons();
-    renderRankDetails(selectedRank);
+    renderRankDetails(selectedRank, selectedRole);
 }
 
 // ============================================================
