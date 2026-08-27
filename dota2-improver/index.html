@@ -889,6 +889,20 @@
 
                                 <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;"><i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า</button>
                             </form>
+
+                            <hr style="border-color: rgba(255,255,255,0.08); margin: 20px 0;">
+
+                            <div>
+                                <h4 style="margin: 0 0 8px 0; color: #d4af37;"><i class="fa-solid fa-database"></i> ระบบสำรอง & กู้คืนข้อมูล (Backup & Restore)</h4>
+                                <p class="subtitle" style="margin-bottom: 12px;">ป้องกันข้อมูลหายเมื่อปิดเครื่อง/ล้างเบราว์เซอร์ ด้วยการดาวน์โหลดหรือนำเข้าไฟล์สำรองข้อมูล JSON</p>
+                                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                    <button class="btn btn-secondary" id="btn-export-backup" style="font-weight: 600;"><i class="fa-solid fa-download green-text"></i> สำรองข้อมูลลงไฟล์ (Export JSON)</button>
+                                    <label class="btn btn-secondary" style="font-weight: 600; cursor: pointer; margin: 0;">
+                                        <i class="fa-solid fa-upload gold-text"></i> กู้คืนจากไฟล์ (Import JSON)
+                                        <input type="file" id="input-import-backup" accept=".json" style="display: none;">
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -743,7 +743,12 @@ const FOCUS_SKILLS_POOL = [
     { skill: "Creep Stacking", desc: "สแตกครีปป่าทุก X:53 เพื่อเพิ่มทองและ XP สำหรับตัวฟาร์ม", position: "Pos 3/4" }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Auto-restore IndexedDB backup into localStorage if cleared by OS reboot
+    if (typeof IDB !== 'undefined' && IDB.restoreAll) {
+        await IDB.restoreAll();
+    }
+
     // Initial UI and components
     initNavigation();
     initSettings();
@@ -2582,13 +2587,41 @@ function initSettings() {
                 }
             }
             
-            alert('✅ บันทึกข้อมูลและคุกกี้ (Cookies) เรียบร้อยแล้ว! ระบบจะจำข้อมูลของคุณตลอดไป');
+            alert('✅ บันทึกข้อมูลเรียบร้อย! ข้อมูลถูกบันทึกทั้ง LocalStorage, Cookies และ IndexedDB');
             switchTab('dashboard');
         });
     }
     
     const syncBtn = document.getElementById('btn-sync-opendota');
     if (syncBtn) syncBtn.addEventListener('click', syncOpenDotaMatches);
+
+    // Export Backup JSON
+    const exportBtn = document.getElementById('btn-export-backup');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            StorageManager.exportAllBackup();
+        });
+    }
+
+    // Import Backup JSON
+    const importInput = document.getElementById('input-import-backup');
+    if (importInput) {
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const success = await StorageManager.importAllBackup(event.target.result);
+                if (success) {
+                    alert('✅ กู้คืนข้อมูลจากไฟล์เรียบร้อยแล้ว!');
+                    window.location.reload();
+                } else {
+                    alert('❌ ไม่สามารถอ่านไฟล์สำรองข้อมูลได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
 }
 
 // --- Interactive Game Trainer ---
