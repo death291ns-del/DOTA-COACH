@@ -766,6 +766,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initProSettingsGuide();
     initPatchNotes();
     initMapGuide();
+    initWeaknessDetector();
+    initHeroMatrix();
     
     fetchHeroList();
     
@@ -4324,5 +4326,416 @@ function initMapGuide() {
 
         </div>
     `;
+}
+
+// ============================================================
+// 🤖 AI Personal Weakness Detector
+// ============================================================
+
+const RANK_BENCHMARKS = {
+    Herald:   { gpm: 350, xpm: 400, kda: 1.8, lh10: 25, hdmg: 300, tdmg: 1000, deaths: 9.0 },
+    Guardian: { gpm: 380, xpm: 430, kda: 2.2, lh10: 35, hdmg: 350, tdmg: 1500, deaths: 8.5 },
+    Crusader: { gpm: 420, xpm: 470, kda: 2.6, lh10: 45, hdmg: 400, tdmg: 2000, deaths: 8.0 },
+    Archon:   { gpm: 460, xpm: 510, kda: 3.0, lh10: 55, hdmg: 450, tdmg: 2500, deaths: 7.5 },
+    Legend:   { gpm: 500, xpm: 550, kda: 3.4, lh10: 65, hdmg: 500, tdmg: 3000, deaths: 7.0 },
+    Ancient:  { gpm: 540, xpm: 590, kda: 3.8, lh10: 75, hdmg: 550, tdmg: 3500, deaths: 6.5 },
+    Divine:   { gpm: 580, xpm: 630, kda: 4.2, lh10: 85, hdmg: 600, tdmg: 4000, deaths: 6.0 },
+    Immortal: { gpm: 630, xpm: 680, kda: 4.8, lh10: 95, hdmg: 680, tdmg: 5000, deaths: 5.0 }
+};
+
+const WEAKNESS_TIPS = {
+    gpm: { label: '💰 GPM (ทองต่อนาที)', weakness: 'ฟาร์มช้ากว่าค่าเฉลี่ยแร้งก์', tips: ['ฝึกเคลียร์ครีปเลนแล้วสลับฟาร์มป่า (Push & Farm Cycle)','ซื้อไอเทมสปีดฟาร์มก่อนเช่น Battle Fury / Maelstrom / Radiance','อย่าเดินไปมาเปล่าๆ ทุกวินาทีต้องฟาร์ม'] },
+    xpm: { label: '⚡ XPM (ประสบการณ์ต่อนาที)', weakness: 'เก็บเลเวลช้า', tips: ['อย่ายืนเลนเดียวกับ Carry ถ้าเป็นซัพพอร์ต','เก็บรูน Wisdom ทุก 7 นาที','Stack ครีปป่าให้ Carry แล้วขอแชร์ XP'] },
+    kda: { label: '⚔️ KDA (Kill/Death/Assist)', weakness: 'ตายบ่อยเกินหรือมีส่วนร่วมน้อย', tips: ['มองมินิแมพทุก 5 วินาที','อย่าไฟต์ในพื้นที่ไม่มี Ward/Vision','รอให้ทีมรวมตัวก่อนค่อยเข้าไฟต์'] },
+    lh: { label: '🎯 Last Hit / 10 นาที', weakness: 'เก็บครีปได้น้อยกว่าค่าเฉลี่ย', tips: ['ฝึก Last Hit ในโหมด Demo Hero วันละ 10 นาที','ตั้งเป้า 60 ตัวใน 10 นาทีแรก','เรียนรู้จังหวะ Creep Aggro Trick ดึงครีปเข้าหาตัว'] },
+    hdmg: { label: '🗡️ Hero Damage / นาที', weakness: 'สร้างความเสียหายต่อศัตรูน้อย', tips: ['เลือก Target ตัวอ่อนแนวหลัง (Pos 4/5) ก่อน','ใช้ BKB เข้าไฟต์ตียาวๆ แทนโดนสตันตายไว','หาจังหวะเปิดไฟต์ที่ทีมพร้อม ไม่ใช่ตีเดี่ยว'] },
+    tdmg: { label: '🏰 Tower Damage', weakness: 'ดันป้อมน้อยไป ไม่กดจบเกม', tips: ['ชนะไฟต์แล้วต้องดันป้อม/ตี Roshan ทันที','อย่ากลับไปฟาร์มป่าหลังชนะทีมไฟต์','เลือกฮีโร่ที่ตีป้อมไวเช่น Lycan, Lone Druid, Shadow Shaman'] },
+    survival: { label: '💀 อัตราการตาย', weakness: 'ตายบ่อยเกินไป เสียเวลาและเงิน', tips: ['ซื้อ BKB เร็วขึ้น อย่ารอจนเลทเกม','TP Scroll ติดตัว 2 อันเสมอ','ถอยเมื่อเห็นฮีโร่ศัตรูหายจากแมพ 2+ ตัว'] }
+};
+
+function initWeaknessDetector() {
+    const container = document.getElementById('analyzer-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="card mb-20" style="border-top: 4px solid #a55eea;">
+            <div class="card-header" style="background:linear-gradient(135deg, rgba(165,94,234,0.12), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="margin:0;"><i class="fa-solid fa-robot" style="color:#a55eea;"></i> เริ่มการวิเคราะห์</h3>
+                    <p class="subtitle" style="margin-top:2px;">กดปุ่มเพื่อดึง 20 แมตช์ล่าสุดจาก OpenDota → วิเคราะห์ → เทียบค่าเฉลี่ยแร้งก์ของคุณ</p>
+                </div>
+                <button class="btn btn-primary" id="btn-run-analysis" style="background:linear-gradient(135deg,#a55eea,#8854d0); white-space:nowrap; font-weight:700;">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> เริ่มวิเคราะห์จุดอ่อน
+                </button>
+            </div>
+        </div>
+        <div id="weakness-results"></div>
+    `;
+
+    document.getElementById('btn-run-analysis')?.addEventListener('click', () => {
+        const settings = StorageManager.getSettings();
+        if (!settings.steamId) {
+            alert('⚠️ กรุณาใส่ Steam ID ในหน้า Config Settings ก่อนครับ');
+            switchTab('settings');
+            return;
+        }
+        runWeaknessAnalysis(settings.steamId);
+    });
+}
+
+async function runWeaknessAnalysis(steamId) {
+    const resultsDiv = document.getElementById('weakness-results');
+    if (!resultsDiv) return;
+
+    resultsDiv.innerHTML = `
+        <div class="card mb-20"><div class="card-body" style="padding:40px; text-align:center;">
+            <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#a55eea;"></i>
+            <p style="margin-top:12px; color:#c0c9d8;">กำลังดึงข้อมูล 20 แมตช์ล่าสุดจาก OpenDota API...</p>
+        </div></div>
+    `;
+
+    try {
+        const res = await fetch('https://api.opendota.com/api/players/' + steamId + '/matches?limit=20&significant=0');
+        if (!res.ok) throw new Error('ไม่สามารถเชื่อมต่อ OpenDota API');
+        const matches = await res.json();
+        if (!matches || !Array.isArray(matches) || matches.length === 0) {
+            resultsDiv.innerHTML = '<div class="card"><div class="card-body" style="padding:20px;">❌ ไม่พบข้อมูลแมตช์ กรุณาตรวจสอบ Steam ID หรือเปิดโปรไฟล์เป็น Public</div></div>';
+            return;
+        }
+
+        const valid = matches.filter(m => m.duration > 600);
+        const n = valid.length || 1;
+        let totK=0,totD=0,totA=0,totGPM=0,totXPM=0,totLH=0,totHD=0,totTD=0,totDur=0,wins=0;
+        valid.forEach(m => {
+            totK += m.kills||0; totD += m.deaths||0; totA += m.assists||0;
+            totGPM += m.gold_per_min||0; totXPM += m.xp_per_min||0;
+            totLH += m.last_hits||0; totHD += m.hero_damage||0; totTD += m.tower_damage||0;
+            totDur += m.duration||0;
+            const rad = m.player_slot < 128;
+            if ((rad && m.radiant_win) || (!rad && !m.radiant_win)) wins++;
+        });
+
+        const avgD = Math.max(totD/n, 0.1);
+        const avgDur = totDur/n;
+        const stats = {
+            gpm: totGPM/n, xpm: totXPM/n,
+            kda: (totK/n + totA/n) / avgD,
+            lh10: (totLH/n) / (avgDur/600),
+            hdmg: (totHD/n) / (avgDur/60),
+            tdmg: totTD/n, deaths: totD/n,
+            kills: totK/n, assists: totA/n,
+            winRate: ((wins/n)*100).toFixed(1), matchCount: n
+        };
+
+        const mmrData = StorageManager.getMmrData();
+        const rankInfo = StorageManager.getRankTierInfo(mmrData.currentMmr);
+        const bench = RANK_BENCHMARKS[rankInfo.tier] || RANK_BENCHMARKS.Archon;
+
+        const scores = {
+            gpm: Math.min(120, (stats.gpm/bench.gpm)*100),
+            xpm: Math.min(120, (stats.xpm/bench.xpm)*100),
+            kda: Math.min(120, (stats.kda/bench.kda)*100),
+            lh: Math.min(120, (stats.lh10/bench.lh10)*100),
+            hdmg: Math.min(120, (stats.hdmg/bench.hdmg)*100),
+            tdmg: Math.min(120, (stats.tdmg/bench.tdmg)*100),
+            survival: Math.min(120, (bench.deaths/Math.max(stats.deaths,0.5))*100)
+        };
+
+        const weakKeys = Object.keys(scores).filter(k => scores[k] < 80);
+        const strongKeys = Object.keys(scores).filter(k => scores[k] >= 110);
+        const overallScore = Math.round(Object.values(scores).reduce((a,b)=>a+b,0) / 7);
+        const grade = overallScore >= 110 ? 'S' : overallScore >= 95 ? 'A' : overallScore >= 80 ? 'B' : overallScore >= 65 ? 'C' : 'D';
+        const gradeColor = grade==='S'?'#d4af37':grade==='A'?'#2ecc71':grade==='B'?'#4bcffa':grade==='C'?'#ff9f43':'#ff4d55';
+
+        resultsDiv.innerHTML = `
+            <div class="grid-layout mb-20" style="grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
+                <!-- Radar Chart -->
+                <div class="card" style="border-top:4px solid #a55eea;">
+                    <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-chart-radar" style="color:#a55eea;"></i> Radar Chart เทียบค่าเฉลี่ย ${rankInfo.name}</h3></div>
+                    <div class="card-body" style="padding:20px; text-align:center;">
+                        <canvas id="weakness-radar-chart" width="380" height="380"></canvas>
+                    </div>
+                </div>
+
+                <!-- Overall Score + Stats Summary -->
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                    <div class="card" style="border-top:4px solid ${gradeColor};">
+                        <div class="card-body" style="padding:20px; text-align:center;">
+                            <div style="font-size:56px; font-weight:800; color:${gradeColor}; text-shadow:0 0 20px ${gradeColor}44; font-family:Rajdhani,sans-serif;">${grade}</div>
+                            <div style="font-size:14px; color:#c0c9d8;">Overall Performance Score: <strong style="color:#fff;">${overallScore}%</strong></div>
+                            <div style="display:flex; justify-content:center; gap:20px; margin-top:12px; font-size:13px;">
+                                <span style="color:#2ecc71;"><i class="fa-solid fa-arrow-trend-up"></i> Win Rate: <strong>${stats.winRate}%</strong></span>
+                                <span style="color:#c0c9d8;">แมตช์ที่วิเคราะห์: <strong>${stats.matchCount}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-chart-bar cyan-text"></i> สถิติเฉลี่ย vs ค่าเป้า ${rankInfo.tier}</h3></div>
+                        <div class="card-body" style="padding:16px;">
+                            ${renderStatRow('💰 GPM', stats.gpm.toFixed(0), bench.gpm, scores.gpm)}
+                            ${renderStatRow('⚡ XPM', stats.xpm.toFixed(0), bench.xpm, scores.xpm)}
+                            ${renderStatRow('⚔️ KDA', stats.kda.toFixed(2), bench.kda, scores.kda)}
+                            ${renderStatRow('🎯 LH/10m', stats.lh10.toFixed(0), bench.lh10, scores.lh)}
+                            ${renderStatRow('🗡️ HD/min', stats.hdmg.toFixed(0), bench.hdmg, scores.hdmg)}
+                            ${renderStatRow('🏰 TowerDmg', stats.tdmg.toFixed(0), bench.tdmg, scores.tdmg)}
+                            ${renderStatRow('💀 Deaths', stats.deaths.toFixed(1), bench.deaths, scores.survival, true)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weaknesses -->
+            ${weakKeys.length > 0 ? `
+            <div class="card mb-20" style="border-top:4px solid #ff4d55;">
+                <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="color:#ff4d55;"></i> จุดอ่อนที่ต้องแก้ไข (${weakKeys.length} ด้าน)</h3></div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px;">
+                        ${weakKeys.map(k => {
+                            const info = WEAKNESS_TIPS[k === 'lh' ? 'lh' : k];
+                            if (!info) return '';
+                            return '<div style="background:rgba(255,77,85,0.08); border:1px solid rgba(255,77,85,0.2); border-radius:10px; padding:16px;">' +
+                                '<div style="font-weight:700; color:#ff4d55; margin-bottom:6px;">' + info.label + ' <span style="background:rgba(255,77,85,0.2); padding:2px 8px; border-radius:12px; font-size:12px;">' + Math.round(scores[k]) + '%</span></div>' +
+                                '<div style="color:#ffa0a4; font-size:13px; margin-bottom:8px;">' + info.weakness + '</div>' +
+                                '<ul style="margin:0; padding-left:18px; font-size:12px; color:#c0c9d8;">' + info.tips.map(t => '<li style="margin-bottom:4px;">' + t + '</li>').join('') + '</ul></div>';
+                        }).join('')}
+                    </div>
+                </div>
+            </div>` : ''}
+
+            <!-- Strengths -->
+            ${strongKeys.length > 0 ? `
+            <div class="card mb-20" style="border-top:4px solid #2ecc71;">
+                <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-medal" style="color:#2ecc71;"></i> จุดแข็งของคุณ (${strongKeys.length} ด้าน)</h3></div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        ${strongKeys.map(k => {
+                            const info = WEAKNESS_TIPS[k === 'lh' ? 'lh' : k];
+                            if (!info) return '';
+                            return '<div style="background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.25); border-radius:20px; padding:8px 16px; font-size:13px; color:#2ecc71; font-weight:600;">' + info.label + ' <span style="color:#fff;">' + Math.round(scores[k]) + '%</span> 🔥</div>';
+                        }).join('')}
+                    </div>
+                </div>
+            </div>` : ''}
+        `;
+
+        // Render Radar Chart
+        const ctx = document.getElementById('weakness-radar-chart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['GPM', 'XPM', 'KDA', 'Last Hit', 'Hero Dmg', 'Tower Dmg', 'Survival'],
+                    datasets: [
+                        {
+                            label: 'คุณ',
+                            data: [scores.gpm, scores.xpm, scores.kda, scores.lh, scores.hdmg, scores.tdmg, scores.survival],
+                            borderColor: '#a55eea', backgroundColor: 'rgba(165,94,234,0.15)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#a55eea'
+                        },
+                        {
+                            label: 'ค่าเฉลี่ย ' + rankInfo.tier,
+                            data: [100,100,100,100,100,100,100],
+                            borderColor: '#ff9f43', backgroundColor: 'rgba(255,159,67,0.06)', borderWidth: 2, borderDash: [6,3], pointRadius: 3, pointBackgroundColor: '#ff9f43'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { r: { beginAtZero: true, max: 130, grid: { color: 'rgba(255,255,255,0.08)' }, angleLines: { color: 'rgba(255,255,255,0.08)' }, pointLabels: { color: '#c0c9d8', font: { size: 12 } }, ticks: { display: false } } },
+                    plugins: { legend: { labels: { color: '#c0c9d8', font: { size: 12 } } } }
+                }
+            });
+        }
+
+    } catch(e) {
+        resultsDiv.innerHTML = '<div class="card"><div class="card-body" style="padding:20px;">❌ เกิดข้อผิดพลาด: ' + e.message + '</div></div>';
+    }
+}
+
+function renderStatRow(label, value, benchmark, score, invertColor) {
+    const color = score >= 100 ? '#2ecc71' : score >= 80 ? '#ff9f43' : '#ff4d55';
+    const barW = Math.min(100, score);
+    return '<div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">' +
+        '<div style="width:100px; font-size:13px; color:#c0c9d8; flex-shrink:0;">' + label + '</div>' +
+        '<div style="flex:1; background:rgba(255,255,255,0.06); border-radius:4px; height:18px; overflow:hidden; position:relative;">' +
+            '<div style="width:' + barW + '%; height:100%; background:' + color + '; border-radius:4px; transition:width 0.8s;"></div>' +
+        '</div>' +
+        '<div style="width:80px; text-align:right; font-size:13px;"><strong style="color:' + color + ';">' + value + '</strong><span style="color:#8e95a5;"> / ' + benchmark + '</span></div>' +
+    '</div>';
+}
+
+// ============================================================
+// 🔥 Hero Synergy & Counter Matrix
+// ============================================================
+
+function initHeroMatrix() {
+    const container = document.getElementById('heromatrix-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="card mb-20" style="border-top: 4px solid var(--crimson);">
+            <div class="card-header" style="background:linear-gradient(135deg, rgba(255,77,85,0.1), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="margin:0;"><i class="fa-solid fa-crosshairs crimson-text"></i> เลือกฮีโร่เพื่อดู Matchup</h3>
+                    <p class="subtitle" style="margin-top:2px;">คลิกฮีโร่ที่ต้องการ → ระบบจะดึง Win Rate ปะทะฮีโร่ทุกตัวจาก OpenDota (ข้อมูลจริง)</p>
+                </div>
+                <div style="position:relative; min-width:260px;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:11px; color:#8e95a5;"></i>
+                    <input type="text" id="matrix-hero-search" placeholder="พิมพ์ชื่อฮีโร่... (เช่น Invoker, PA, Lion)" style="width:100%; padding:8px 12px 8px 36px; background:rgba(255,255,255,0.06); border:1px solid var(--border-color); border-radius:6px; color:#fff; font-size:13px;">
+                </div>
+            </div>
+            <div class="card-body" style="padding:16px; max-height:340px; overflow-y:auto;">
+                <div id="matrix-hero-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(105px, 1fr)); gap:8px;">
+                    <div style="text-align:center; padding:20px; color:#8e95a5; grid-column: 1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดรายชื่อฮีโร่...</div>
+                </div>
+            </div>
+        </div>
+        <div id="matrix-results"></div>
+    `;
+
+    // Load hero list
+    loadMatrixHeroGrid();
+
+    // Search filter
+    document.getElementById('matrix-hero-search')?.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        document.querySelectorAll('.matrix-hero-card').forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            card.style.display = name.includes(q) ? '' : 'none';
+        });
+    });
+}
+
+async function loadMatrixHeroGrid() {
+    const grid = document.getElementById('matrix-hero-grid');
+    if (!grid) return;
+
+    try {
+        const res = await fetch('https://api.opendota.com/api/heroes');
+        const heroes = await res.json();
+        if (!heroes || !Array.isArray(heroes)) throw new Error('No heroes');
+
+        heroes.sort((a,b) => a.localized_name.localeCompare(b.localized_name));
+        grid.innerHTML = heroes.map(h => {
+            const imgUrl = getHeroImageUrl(h.localized_name);
+            return '<div class="matrix-hero-card" data-id="' + h.id + '" data-name="' + h.localized_name + '" ' +
+                'style="text-align:center; padding:8px 4px; background:rgba(255,255,255,0.04); border:1px solid transparent; border-radius:8px; cursor:pointer; transition:all 0.2s;" ' +
+                'onmouseover="this.style.borderColor=\'rgba(255,77,85,0.5)\'; this.style.background=\'rgba(255,77,85,0.08)\';" ' +
+                'onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'rgba(255,255,255,0.04)\';">' +
+                '<img src="' + imgUrl + '" alt="' + h.localized_name + '" style="width:48px; height:27px; border-radius:4px; object-fit:cover; display:block; margin:0 auto 4px;" onerror="this.style.display=\'none\'">' +
+                '<div style="font-size:11px; color:#c0c9d8; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + h.localized_name + '</div></div>';
+        }).join('');
+
+        // Click handler for each hero card
+        grid.querySelectorAll('.matrix-hero-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const heroId = card.getAttribute('data-id');
+                const heroName = card.getAttribute('data-name');
+                // Highlight selected
+                grid.querySelectorAll('.matrix-hero-card').forEach(c => { c.style.borderColor='transparent'; c.style.background='rgba(255,255,255,0.04)'; });
+                card.style.borderColor = '#ff4d55';
+                card.style.background = 'rgba(255,77,85,0.15)';
+                showHeroMatchups(heroId, heroName);
+            });
+        });
+    } catch(e) {
+        grid.innerHTML = '<div style="padding:20px; color:#ff4d55; grid-column:1/-1;">❌ ไม่สามารถโหลดรายชื่อฮีโร่ได้</div>';
+    }
+}
+
+async function showHeroMatchups(heroId, heroName) {
+    const resultsDiv = document.getElementById('matrix-results');
+    if (!resultsDiv) return;
+
+    resultsDiv.innerHTML = '<div class="card mb-20"><div class="card-body" style="padding:30px; text-align:center;"><i class="fa-solid fa-spinner fa-spin fa-2x crimson-text"></i><p style="margin-top:10px; color:#c0c9d8;">กำลังดึงข้อมูล Matchup ของ ' + heroName + '...</p></div></div>';
+
+    try {
+        const res = await fetch('https://api.opendota.com/api/heroes/' + heroId + '/matchups');
+        const matchups = await res.json();
+        if (!matchups || !Array.isArray(matchups)) throw new Error('No data');
+
+        // Need hero names map
+        const heroRes = await fetch('https://api.opendota.com/api/heroes');
+        const allHeroes = await heroRes.json();
+        const heroMap = {};
+        allHeroes.forEach(h => { heroMap[h.id] = h.localized_name; });
+
+        // Calculate advantage % and sort
+        const processed = matchups
+            .filter(m => m.games_played >= 50)
+            .map(m => ({
+                heroId: m.hero_id,
+                name: heroMap[m.hero_id] || 'Unknown',
+                games: m.games_played,
+                wins: m.wins,
+                winRate: ((m.wins / m.games_played) * 100).toFixed(1),
+                advantage: ((m.wins / m.games_played) * 100 - 50).toFixed(1)
+            }));
+
+        const counters = processed.filter(m => parseFloat(m.advantage) < -1).sort((a,b) => parseFloat(a.advantage) - parseFloat(b.advantage));
+        const goodAgainst = processed.filter(m => parseFloat(m.advantage) > 1).sort((a,b) => parseFloat(b.advantage) - parseFloat(a.advantage));
+
+        const heroImg = getHeroImageUrl(heroName);
+
+        resultsDiv.innerHTML = `
+            <div class="card mb-20" style="border-top:4px solid var(--crimson);">
+                <div class="card-header" style="justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${heroImg}" alt="${heroName}" style="width:64px; height:36px; border-radius:6px; object-fit:cover;" onerror="this.style.display='none'">
+                        <div>
+                            <h3 style="margin:0;">${heroName} — Matchup Analysis</h3>
+                            <p class="subtitle" style="margin-top:2px;">ข้อมูลจาก OpenDota (แมตช์ขั้นต่ำ 50 เกม)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-layout mb-20" style="grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
+                <!-- Countered By (ตัวที่แพ้) -->
+                <div class="card" style="border-top:3px solid #ff4d55;">
+                    <div class="card-header"><h3 style="margin:0; font-size:15px;"><i class="fa-solid fa-skull-crossbones" style="color:#ff4d55;"></i> ฮีโร่ที่ Counter ${heroName} (แพ้ง่าย) — ${counters.length} ตัว</h3></div>
+                    <div class="card-body" style="padding:12px; max-height:500px; overflow-y:auto;">
+                        ${counters.slice(0, 25).map((m, i) => renderMatchupBar(m, i, 'bad')).join('')}
+                        ${counters.length === 0 ? '<div style="padding:12px; color:#8e95a5; text-align:center;">ไม่พบข้อมูล Counter ที่ชัดเจน</div>' : ''}
+                    </div>
+                </div>
+
+                <!-- Good Against (ตัวที่ชนะ) -->
+                <div class="card" style="border-top:3px solid #2ecc71;">
+                    <div class="card-header"><h3 style="margin:0; font-size:15px;"><i class="fa-solid fa-trophy" style="color:#2ecc71;"></i> ฮีโร่ที่ ${heroName} Counter ได้ (ชนะง่าย) — ${goodAgainst.length} ตัว</h3></div>
+                    <div class="card-body" style="padding:12px; max-height:500px; overflow-y:auto;">
+                        ${goodAgainst.slice(0, 25).map((m, i) => renderMatchupBar(m, i, 'good')).join('')}
+                        ${goodAgainst.length === 0 ? '<div style="padding:12px; color:#8e95a5; text-align:center;">ไม่พบข้อมูล Synergy ที่ชัดเจน</div>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+    } catch(e) {
+        resultsDiv.innerHTML = '<div class="card"><div class="card-body" style="padding:20px;">❌ เกิดข้อผิดพลาด: ' + e.message + '</div></div>';
+    }
+}
+
+function renderMatchupBar(m, index, type) {
+    const color = type === 'good' ? '#2ecc71' : '#ff4d55';
+    const bgColor = type === 'good' ? 'rgba(46,204,113,0.08)' : 'rgba(255,77,85,0.08)';
+    const barW = Math.min(100, Math.abs(parseFloat(m.advantage)) * 4);
+    const imgUrl = getHeroImageUrl(m.name);
+    const advSign = parseFloat(m.advantage) > 0 ? '+' : '';
+
+    return '<div style="display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:' + bgColor + '; margin-bottom:4px;">' +
+        '<div style="width:18px; font-size:11px; color:#8e95a5; text-align:right; flex-shrink:0;">' + (index+1) + '</div>' +
+        '<img src="' + imgUrl + '" style="width:36px; height:20px; border-radius:3px; object-fit:cover; flex-shrink:0;" onerror="this.style.display=\'none\'">' +
+        '<div style="flex:1; min-width:0;">' +
+            '<div style="font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + m.name + '</div>' +
+            '<div style="height:6px; background:rgba(255,255,255,0.06); border-radius:3px; margin-top:3px; overflow:hidden;">' +
+                '<div style="width:' + barW + '%; height:100%; background:' + color + '; border-radius:3px;"></div>' +
+            '</div>' +
+        '</div>' +
+        '<div style="width:60px; text-align:right; flex-shrink:0; font-size:12px;">' +
+            '<div style="color:' + color + '; font-weight:700;">' + m.winRate + '%</div>' +
+            '<div style="color:#8e95a5; font-size:10px;">' + advSign + m.advantage + '%</div>' +
+        '</div>' +
+    '</div>';
 }
 
