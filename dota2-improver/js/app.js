@@ -841,6 +841,11 @@ function switchTab(tabId) {
         activeContent.classList.add('active');
     }
 
+    // GA4 Analytics Tab View Tracking
+    if (typeof trackGAEvent === 'function') {
+        trackGAEvent('tab_view', { tab_id: tabId });
+    }
+
     if (tabId === 'dashboard') {
         renderDashboard();
     } else if (tabId === 'journal') {
@@ -2531,10 +2536,12 @@ function initSettings() {
     const steamEl = document.getElementById('settings-steamid');
     const dotaEl = document.getElementById('settings-dotabuff');
     const targetEl = document.getElementById('settings-daily-target');
+    const ga4El = document.getElementById('settings-ga4-id');
 
     if (steamEl) steamEl.value = settings.steamId || '';
     if (dotaEl) dotaEl.value = settings.dotabuffLink || '';
     if (targetEl) targetEl.value = settings.dailyTarget || 3;
+    if (ga4El) ga4El.value = settings.ga4Id || '';
     
     if (settings.steamId) {
         fetchPlayerName(settings.steamId);
@@ -2550,7 +2557,8 @@ function initSettings() {
         const currentSettings = {
             steamId: steamEl ? steamEl.value.trim() : '',
             dotabuffLink: dotaEl ? dotaEl.value.trim() : '',
-            dailyTarget: targetEl ? (parseInt(targetEl.value, 10) || 3) : 3
+            dailyTarget: targetEl ? (parseInt(targetEl.value, 10) || 3) : 3,
+            ga4Id: ga4El ? ga4El.value.trim() : ''
         };
         StorageManager.saveSettings(currentSettings);
     };
@@ -2558,6 +2566,7 @@ function initSettings() {
     if (steamEl) steamEl.addEventListener('input', autoSaveHandler);
     if (dotaEl) dotaEl.addEventListener('input', autoSaveHandler);
     if (targetEl) targetEl.addEventListener('input', autoSaveHandler);
+    if (ga4El) ga4El.addEventListener('input', autoSaveHandler);
     
     const form = document.getElementById('settings-form');
     if (form) {
@@ -2567,10 +2576,14 @@ function initSettings() {
             const newSettings = {
                 steamId: steamEl ? steamEl.value.trim() : '',
                 dotabuffLink: dotaEl ? dotaEl.value.trim() : '',
-                dailyTarget: targetEl ? (parseInt(targetEl.value) || 3) : 3
+                dailyTarget: targetEl ? (parseInt(targetEl.value) || 3) : 3,
+                ga4Id: ga4El ? ga4El.value.trim() : ''
             };
             
             StorageManager.saveSettings(newSettings);
+            if (typeof trackGAEvent === 'function') {
+                trackGAEvent('settings_saved', { has_steam_id: !!newSettings.steamId });
+            }
             
             if (newSettings.steamId) {
                 fetchPlayerName(newSettings.steamId);

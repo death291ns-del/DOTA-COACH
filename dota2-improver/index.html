@@ -19,6 +19,32 @@
     <meta name="twitter:description" content="ยกระดับฝีมือ Dota 2 ด้วยระบบวิเคราะห์เกรดแมตช์ AI, Live Rune Timer และคู่มือบิลด์ไอเทม">
     <meta name="twitter:image" content="assets/og_banner.jpg">
 
+    <!-- Google Analytics 4 (GA4) Integration — Locked to Owner Account -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-M7CQCMKJNY"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        
+        const GA4_MEASUREMENT_ID = 'G-M7CQCMKJNY';
+        gtag('config', GA4_MEASUREMENT_ID, {
+            send_page_view: true,
+            cookie_flags: 'max-age=7200;SameSite=Lax'
+        });
+
+        // Event Tracking Helper
+        function trackGAEvent(eventName, params = {}) {
+            try {
+                if (typeof gtag === 'function') {
+                    gtag('event', eventName, params);
+                    console.log(`[GA4 Event] ${eventName}`, params);
+                }
+            } catch (e) {
+                // Ignore analytics errors
+            }
+        }
+    </script>
+
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -917,6 +943,14 @@
                                 <div class="form-group">
                                     <label for="settings-daily-target"><i class="fa-solid fa-bullseye"></i> เป้าหมายจำนวนเกมซ้อมต่อวัน (Games/Day)</label>
                                     <input type="number" id="settings-daily-target" min="1" max="15" value="3" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label><i class="fa-solid fa-chart-line cyan-text"></i> Google Analytics 4 Status (เจ้าของเว็บ)</label>
+                                    <div style="background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); color: #2ecc71; padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-circle-check"></i> ล็อกการเชื่อมต่อกับบัญชีเจ้าของถาวร: <code style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">G-M7CQCMKJNY</code>
+                                    </div>
+                                    <small class="form-help">สถิติการใช้งานของผู้เล่นทุกคนจะถูกส่งตรงไปยังแดชบอร์ด Google Analytics ของคุณ 100% อัตโนมัติ</small>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;"><i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า</button>

@@ -199,7 +199,8 @@ const StorageManager = {
         const defaultSettings = {
             steamId: cookieSteamId || '',
             dotabuffLink: cookieDotabuff || '',
-            dailyTarget: cookieTarget ? (parseInt(cookieTarget, 10) || 3) : 3
+            dailyTarget: cookieTarget ? (parseInt(cookieTarget, 10) || 3) : 3,
+            ga4Id: ''
         };
 
         const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
@@ -209,7 +210,8 @@ const StorageManager = {
             return {
                 steamId: parsed.steamId || cookieSteamId || '',
                 dotabuffLink: parsed.dotabuffLink || cookieDotabuff || '',
-                dailyTarget: parsed.dailyTarget || (parseInt(cookieTarget, 10) || 3)
+                dailyTarget: parsed.dailyTarget || (parseInt(cookieTarget, 10) || 3),
+                ga4Id: parsed.ga4Id || ''
             };
         } catch (e) {
             return defaultSettings;
@@ -221,6 +223,7 @@ const StorageManager = {
         if (settings.steamId !== undefined) this.setCookie('dota2_steam_id', settings.steamId);
         if (settings.dotabuffLink !== undefined) this.setCookie('dota2_dotabuff', settings.dotabuffLink);
         if (settings.dailyTarget !== undefined) this.setCookie('dota2_daily_target', settings.dailyTarget.toString());
+        if (settings.ga4Id !== undefined) this.setCookie('dota2_ga4_id', settings.ga4Id);
         return true;
     },
 
