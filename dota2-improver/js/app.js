@@ -1068,6 +1068,32 @@ function normalizeSteamId(input) {
     return str;
 }
 
+// Helper: Fetch with CORS Proxy Fallback if direct fetch is blocked by AdBlock or Network
+async function fetchWithFallback(url) {
+    try {
+        const res = await fetch(url);
+        if (res.ok || res.status === 429) return res;
+    } catch (e) {
+        console.warn('Direct fetch failed, attempting proxy fallback...', e);
+    }
+    
+    // Fallback via public CORS Proxy
+    try {
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+        const resProxy = await fetch(proxyUrl);
+        if (resProxy.ok) return resProxy;
+    } catch (e2) {
+        console.warn('Proxy fallback 1 failed, attempting proxy 2...', e2);
+    }
+
+    try {
+        const proxyUrl2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+        return await fetch(proxyUrl2);
+    } catch (e3) {
+        throw new Error('Network error (Failed to fetch)');
+    }
+}
+
 async function syncOpenDotaMatches() {
     const rawSettings = StorageManager.getSettings();
     const listBody = document.getElementById('api-matches-list');
@@ -1090,10 +1116,10 @@ async function syncOpenDotaMatches() {
     listBody.innerHTML = `<tr><td colspan="5" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลล่าสุดจาก OpenDota API (ID: ${accountId})...</td></tr>`;
     
     try {
-        const response = await fetch(`https://api.opendota.com/api/players/${accountId}/matches?limit=20`);
+        const response = await fetchWithFallback(`https://api.opendota.com/api/players/${accountId}/matches?limit=20`);
         
         if (response.status === 429) {
-            listBody.innerHTML = `<tr><td colspan="5" class="text-center style="color:#ff9f43;"><i class="fa-solid fa-clock"></i> OpenDota API ติดขีดจำกัดความถี่ (Rate Limit) กรุณารอ 10 วินาทีแล้วกดซิงค์ใหม่</td></tr>`;
+            listBody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#ff9f43;"><i class="fa-solid fa-clock"></i> OpenDota API ติดขีดจำกัดความถี่ (Rate Limit) กรุณารอ 10 วินาทีแล้วกดซิงค์ใหม่</td></tr>`;
             return;
         }
 
@@ -1145,7 +1171,7 @@ async function syncOpenDotaMatches() {
         listBody.innerHTML = `
             <tr><td colspan="5" class="text-center text-danger" style="padding:16px;">
                 <i class="fa-solid fa-triangle-exclamation"></i> เกิดข้อผิดพลาดในการเชื่อมต่อ OpenDota (${e.message})<br>
-                <small style="color:#c0c9d8;">โปรดตรวจสอบว่าใส่ Steam 32-bit ID ถูกต้องหรือไม่ หรือลองกดซิงค์ใหม่อีกครั้ง</small>
+                <small style="color:#c0c9d8;">หากใช้งานจากเบราว์เซอร์ที่มี AdBlocker/Brave Shield แนะนำให้ลองปิดหรือเปลี่ยนเบราว์เซอร์ดูครับ</small>
             </td></tr>`;
     }
 }
@@ -1154,7 +1180,7 @@ async function fetchPlayerName(rawId) {
     const accountId = normalizeSteamId(rawId);
     if (!accountId) return;
     try {
-        const response = await fetch(`https://api.opendota.com/api/players/${accountId}`);
+        const response = await fetchWithFallback(`https://api.opendota.com/api/players/${accountId}`);
         if (response.ok) {
             const data = await response.json();
             if (data.profile) {
@@ -4541,7 +4567,8 @@ async function runWeaknessAnalysis(steamId, roleFilter = 'all') {
     `;
 
     try {
-        const res = await fetch('https://api.opendota.com/api/players/' + steamId + '/recentMatches');
+        const accountId = normalizeSteamId(steamId);
+        const res = await fetchWithFallback('https://api.opendota.com/api/players/' + accountId + '/recentMatches');
         if (!res.ok) throw new Error('ไม่สามารถเชื่อมต่อ OpenDota API');
         const rawMatches = await res.json();
         if (!rawMatches || !Array.isArray(rawMatches) || rawMatches.length === 0) {
