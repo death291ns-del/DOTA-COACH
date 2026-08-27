@@ -4408,7 +4408,7 @@ async function runWeaknessAnalysis(steamId) {
     `;
 
     try {
-        const res = await fetch('https://api.opendota.com/api/players/' + steamId + '/matches?limit=20&significant=0');
+        const res = await fetch('https://api.opendota.com/api/players/' + steamId + '/recentMatches');
         if (!res.ok) throw new Error('ไม่สามารถเชื่อมต่อ OpenDota API');
         const matches = await res.json();
         if (!matches || !Array.isArray(matches) || matches.length === 0) {
