@@ -4345,26 +4345,70 @@ function initMapGuide() {
 // 🤖 AI Personal Weakness Detector
 // ============================================================
 
-const RANK_BENCHMARKS = {
-    Herald:   { gpm: 350, xpm: 400, kda: 1.8, lh10: 25, hdmg: 300, tdmg: 1000, deaths: 9.0 },
-    Guardian: { gpm: 380, xpm: 430, kda: 2.2, lh10: 35, hdmg: 350, tdmg: 1500, deaths: 8.5 },
-    Crusader: { gpm: 420, xpm: 470, kda: 2.6, lh10: 45, hdmg: 400, tdmg: 2000, deaths: 8.0 },
-    Archon:   { gpm: 460, xpm: 510, kda: 3.0, lh10: 55, hdmg: 450, tdmg: 2500, deaths: 7.5 },
-    Legend:   { gpm: 500, xpm: 550, kda: 3.4, lh10: 65, hdmg: 500, tdmg: 3000, deaths: 7.0 },
-    Ancient:  { gpm: 540, xpm: 590, kda: 3.8, lh10: 75, hdmg: 550, tdmg: 3500, deaths: 6.5 },
-    Divine:   { gpm: 580, xpm: 630, kda: 4.2, lh10: 85, hdmg: 600, tdmg: 4000, deaths: 6.0 },
-    Immortal: { gpm: 630, xpm: 680, kda: 4.8, lh10: 95, hdmg: 680, tdmg: 5000, deaths: 5.0 }
+const ROLE_BENCHMARKS = {
+    Core: { // Pos 1 Safe Carry
+        Herald:   { gpm: 420, xpm: 450, kda: 2.2, lh10: 40, hdmg: 350, tdmg: 1500, deaths: 8.0 },
+        Guardian: { gpm: 470, xpm: 500, kda: 2.6, lh10: 50, hdmg: 400, tdmg: 2200, deaths: 7.5 },
+        Crusader: { gpm: 520, xpm: 550, kda: 3.0, lh10: 60, hdmg: 450, tdmg: 3000, deaths: 7.0 },
+        Archon:   { gpm: 570, xpm: 600, kda: 3.4, lh10: 68, hdmg: 500, tdmg: 3800, deaths: 6.5 },
+        Legend:   { gpm: 620, xpm: 650, kda: 3.8, lh10: 75, hdmg: 550, tdmg: 4500, deaths: 6.0 },
+        Ancient:  { gpm: 660, xpm: 700, kda: 4.2, lh10: 82, hdmg: 600, tdmg: 5200, deaths: 5.5 },
+        Divine:   { gpm: 710, xpm: 750, kda: 4.6, lh10: 88, hdmg: 660, tdmg: 6000, deaths: 5.0 },
+        Immortal: { gpm: 770, xpm: 800, kda: 5.2, lh10: 95, hdmg: 750, tdmg: 7500, deaths: 4.5 }
+    },
+    Mid: { // Pos 2 Midlaner
+        Herald:   { gpm: 400, xpm: 460, kda: 2.4, lh10: 35, hdmg: 400, tdmg: 1200, deaths: 8.5 },
+        Guardian: { gpm: 450, xpm: 520, kda: 2.8, lh10: 45, hdmg: 480, tdmg: 1800, deaths: 8.0 },
+        Crusader: { gpm: 500, xpm: 580, kda: 3.2, lh10: 55, hdmg: 550, tdmg: 2400, deaths: 7.2 },
+        Archon:   { gpm: 550, xpm: 640, kda: 3.6, lh10: 62, hdmg: 620, tdmg: 3000, deaths: 6.5 },
+        Legend:   { gpm: 600, xpm: 700, kda: 4.0, lh10: 70, hdmg: 690, tdmg: 3600, deaths: 6.0 },
+        Ancient:  { gpm: 640, xpm: 750, kda: 4.4, lh10: 76, hdmg: 750, tdmg: 4200, deaths: 5.5 },
+        Divine:   { gpm: 690, xpm: 800, kda: 4.8, lh10: 82, hdmg: 820, tdmg: 5000, deaths: 5.0 },
+        Immortal: { gpm: 750, xpm: 860, kda: 5.4, lh10: 90, hdmg: 900, tdmg: 6000, deaths: 4.5 }
+    },
+    Offlane: { // Pos 3 Tank / Initiator
+        Herald:   { gpm: 340, xpm: 390, kda: 2.0, lh10: 25, hdmg: 320, tdmg: 900,  deaths: 9.0 },
+        Guardian: { gpm: 380, xpm: 430, kda: 2.4, lh10: 33, hdmg: 380, tdmg: 1300, deaths: 8.5 },
+        Crusader: { gpm: 420, xpm: 480, kda: 2.8, lh10: 42, hdmg: 440, tdmg: 1800, deaths: 7.8 },
+        Archon:   { gpm: 470, xpm: 530, kda: 3.1, lh10: 50, hdmg: 500, tdmg: 2200, deaths: 7.2 },
+        Legend:   { gpm: 510, xpm: 580, kda: 3.4, lh10: 58, hdmg: 560, tdmg: 2700, deaths: 6.6 },
+        Ancient:  { gpm: 550, xpm: 620, kda: 3.8, lh10: 64, hdmg: 620, tdmg: 3200, deaths: 6.0 },
+        Divine:   { gpm: 590, xpm: 670, kda: 4.2, lh10: 70, hdmg: 680, tdmg: 3800, deaths: 5.5 },
+        Immortal: { gpm: 640, xpm: 720, kda: 4.8, lh10: 76, hdmg: 750, tdmg: 4500, deaths: 5.0 }
+    },
+    Support: { // Pos 4 & 5 Hard/Soft Support
+        Herald:   { gpm: 260, xpm: 320, kda: 1.8, lh10: 8,  hdmg: 220, tdmg: 300,  deaths: 9.5 },
+        Guardian: { gpm: 290, xpm: 360, kda: 2.1, lh10: 10, hdmg: 260, tdmg: 450,  deaths: 9.0 },
+        Crusader: { gpm: 320, xpm: 400, kda: 2.4, lh10: 12, hdmg: 300, tdmg: 600,  deaths: 8.2 },
+        Archon:   { gpm: 350, xpm: 440, kda: 2.7, lh10: 15, hdmg: 350, tdmg: 800,  deaths: 7.6 },
+        Legend:   { gpm: 380, xpm: 480, kda: 3.0, lh10: 18, hdmg: 400, tdmg: 1000, deaths: 7.0 },
+        Ancient:  { gpm: 410, xpm: 520, kda: 3.3, lh10: 20, hdmg: 450, tdmg: 1200, deaths: 6.5 },
+        Divine:   { gpm: 440, xpm: 560, kda: 3.7, lh10: 22, hdmg: 500, tdmg: 1500, deaths: 6.0 },
+        Immortal: { gpm: 480, xpm: 600, kda: 4.2, lh10: 25, hdmg: 560, tdmg: 1800, deaths: 5.2 }
+    }
 };
 
 const WEAKNESS_TIPS = {
-    gpm: { label: '💰 GPM (ทองต่อนาที)', weakness: 'ฟาร์มช้ากว่าค่าเฉลี่ยแร้งก์', tips: ['ฝึกเคลียร์ครีปเลนแล้วสลับฟาร์มป่า (Push & Farm Cycle)','ซื้อไอเทมสปีดฟาร์มก่อนเช่น Battle Fury / Maelstrom / Radiance','อย่าเดินไปมาเปล่าๆ ทุกวินาทีต้องฟาร์ม'] },
+    gpm: { label: '💰 GPM (ทองต่อนาที)', weakness: 'ฟาร์มช้ากว่าค่าเฉลี่ยแร้งก์ในโรลนี้', tips: ['ฝึกเคลียร์ครีปเลนแล้วสลับฟาร์มป่า (Push & Farm Cycle)','ซื้อไอเทมสปีดฟาร์มก่อนเช่น Battle Fury / Maelstrom / Radiance','อย่าเดินไปมาเปล่าๆ ทุกวินาทีต้องฟาร์ม'] },
     xpm: { label: '⚡ XPM (ประสบการณ์ต่อนาที)', weakness: 'เก็บเลเวลช้า', tips: ['อย่ายืนเลนเดียวกับ Carry ถ้าเป็นซัพพอร์ต','เก็บรูน Wisdom ทุก 7 นาที','Stack ครีปป่าให้ Carry แล้วขอแชร์ XP'] },
     kda: { label: '⚔️ KDA (Kill/Death/Assist)', weakness: 'ตายบ่อยเกินหรือมีส่วนร่วมน้อย', tips: ['มองมินิแมพทุก 5 วินาที','อย่าไฟต์ในพื้นที่ไม่มี Ward/Vision','รอให้ทีมรวมตัวก่อนค่อยเข้าไฟต์'] },
-    lh: { label: '🎯 Last Hit / 10 นาที', weakness: 'เก็บครีปได้น้อยกว่าค่าเฉลี่ย', tips: ['ฝึก Last Hit ในโหมด Demo Hero วันละ 10 นาที','ตั้งเป้า 60 ตัวใน 10 นาทีแรก','เรียนรู้จังหวะ Creep Aggro Trick ดึงครีปเข้าหาตัว'] },
+    lh: { label: '🎯 Last Hit / 10 นาที', weakness: 'เก็บครีปได้น้อยกว่าค่าเฉลี่ยโรลนี้', tips: ['ฝึก Last Hit ในโหมด Demo Hero วันละ 10 นาที','ตั้งเป้า 60+ ตัวใน 10 นาทีแรกสำหรับ Core','เรียนรู้จังหวะ Creep Aggro Trick ดึงครีปเข้าหาตัว'] },
     hdmg: { label: '🗡️ Hero Damage / นาที', weakness: 'สร้างความเสียหายต่อศัตรูน้อย', tips: ['เลือก Target ตัวอ่อนแนวหลัง (Pos 4/5) ก่อน','ใช้ BKB เข้าไฟต์ตียาวๆ แทนโดนสตันตายไว','หาจังหวะเปิดไฟต์ที่ทีมพร้อม ไม่ใช่ตีเดี่ยว'] },
     tdmg: { label: '🏰 Tower Damage', weakness: 'ดันป้อมน้อยไป ไม่กดจบเกม', tips: ['ชนะไฟต์แล้วต้องดันป้อม/ตี Roshan ทันที','อย่ากลับไปฟาร์มป่าหลังชนะทีมไฟต์','เลือกฮีโร่ที่ตีป้อมไวเช่น Lycan, Lone Druid, Shadow Shaman'] },
     survival: { label: '💀 อัตราการตาย', weakness: 'ตายบ่อยเกินไป เสียเวลาและเงิน', tips: ['ซื้อ BKB เร็วขึ้น อย่ารอจนเลทเกม','TP Scroll ติดตัว 2 อันเสมอ','ถอยเมื่อเห็นฮีโร่ศัตรูหายจากแมพ 2+ ตัว'] }
 };
+
+// Helper: Classify player's role in a match based on OpenDota data
+function detectMatchRole(match) {
+    const lh10 = (match.last_hits || 0) / Math.max(1, (match.duration / 600));
+    const gpm = match.gold_per_min || 0;
+    const lane = match.lane_role || match.lane || 0;
+
+    if (lane === 2) return 'Mid'; // Mid Lane
+    if (gpm < 420 && lh10 < 28) return 'Support'; // Support (Pos 4/5)
+    if (lane === 3 || (gpm < 520 && lh10 < 50)) return 'Offlane'; // Offlane (Pos 3)
+    return 'Core'; // Carry (Pos 1)
+}
 
 function initWeaknessDetector() {
     const container = document.getElementById('analyzer-container');
@@ -4374,16 +4418,37 @@ function initWeaknessDetector() {
         <div class="card mb-20" style="border-top: 4px solid #a55eea;">
             <div class="card-header" style="background:linear-gradient(135deg, rgba(165,94,234,0.12), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 <div>
-                    <h3 style="margin:0;"><i class="fa-solid fa-robot" style="color:#a55eea;"></i> เริ่มการวิเคราะห์</h3>
-                    <p class="subtitle" style="margin-top:2px;">กดปุ่มเพื่อดึง 20 แมตช์ล่าสุดจาก OpenDota → วิเคราะห์ → เทียบค่าเฉลี่ยแร้งก์ของคุณ</p>
+                    <h3 style="margin:0;"><i class="fa-solid fa-robot" style="color:#a55eea;"></i> AI Role-Aware Weakness Analyzer</h3>
+                    <p class="subtitle" style="margin-top:2px;">วิเคราะห์จุดอ่อนเจาะลึก 20 แมตช์ล่าสุด **ตาม Role (Pos 1-5)** ของแต่ละเกมอย่างเที่ยงตรง</p>
                 </div>
-                <button class="btn btn-primary" id="btn-run-analysis" style="background:linear-gradient(135deg,#a55eea,#8854d0); white-space:nowrap; font-weight:700;">
-                    <i class="fa-solid fa-magnifying-glass-chart"></i> เริ่มวิเคราะห์จุดอ่อน
-                </button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <div class="btn-group" id="analyzer-role-filter">
+                        <button class="btn btn-small btn-secondary active" data-role="all">🌟 ทุก Role</button>
+                        <button class="btn btn-small btn-secondary" data-role="Core">⚔️ Pos 1 Carry</button>
+                        <button class="btn btn-small btn-secondary" data-role="Mid">⚡ Pos 2 Mid</button>
+                        <button class="btn btn-small btn-secondary" data-role="Offlane">🛡️ Pos 3 Offlane</button>
+                        <button class="btn btn-small btn-secondary" data-role="Support">👁️ Pos 4/5 Support</button>
+                    </div>
+                    <button class="btn btn-primary" id="btn-run-analysis" style="background:linear-gradient(135deg,#a55eea,#8854d0); white-space:nowrap; font-weight:700;">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> วิเคราะห์จุดอ่อน
+                    </button>
+                </div>
             </div>
         </div>
         <div id="weakness-results"></div>
     `;
+
+    let activeRoleFilter = 'all';
+
+    document.querySelectorAll('#analyzer-role-filter .btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#analyzer-role-filter .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeRoleFilter = btn.getAttribute('data-role');
+            const settings = StorageManager.getSettings();
+            if (settings.steamId) runWeaknessAnalysis(settings.steamId, activeRoleFilter);
+        });
+    });
 
     document.getElementById('btn-run-analysis')?.addEventListener('click', () => {
         const settings = StorageManager.getSettings();
@@ -4392,33 +4457,54 @@ function initWeaknessDetector() {
             switchTab('settings');
             return;
         }
-        runWeaknessAnalysis(settings.steamId);
+        runWeaknessAnalysis(settings.steamId, activeRoleFilter);
     });
 }
 
-async function runWeaknessAnalysis(steamId) {
+async function runWeaknessAnalysis(steamId, roleFilter = 'all') {
     const resultsDiv = document.getElementById('weakness-results');
     if (!resultsDiv) return;
 
     resultsDiv.innerHTML = `
         <div class="card mb-20"><div class="card-body" style="padding:40px; text-align:center;">
             <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#a55eea;"></i>
-            <p style="margin-top:12px; color:#c0c9d8;">กำลังดึงข้อมูล 20 แมตช์ล่าสุดจาก OpenDota API...</p>
+            <p style="margin-top:12px; color:#c0c9d8;">กำลังดึงและวิเคราะห์สถิติตาม Role (${roleFilter})...</p>
         </div></div>
     `;
 
     try {
         const res = await fetch('https://api.opendota.com/api/players/' + steamId + '/recentMatches');
         if (!res.ok) throw new Error('ไม่สามารถเชื่อมต่อ OpenDota API');
-        const matches = await res.json();
-        if (!matches || !Array.isArray(matches) || matches.length === 0) {
+        const rawMatches = await res.json();
+        if (!rawMatches || !Array.isArray(rawMatches) || rawMatches.length === 0) {
             resultsDiv.innerHTML = '<div class="card"><div class="card-body" style="padding:20px;">❌ ไม่พบข้อมูลแมตช์ กรุณาตรวจสอบ Steam ID หรือเปิดโปรไฟล์เป็น Public</div></div>';
             return;
         }
 
-        const valid = matches.filter(m => m.duration > 600);
-        const n = valid.length || 1;
+        // Attach detected role to each match
+        const matchesWithRole = rawMatches.filter(m => m.duration > 600).map(m => ({
+            ...m,
+            detectedRole: detectMatchRole(m)
+        }));
+
+        // Filter by role if requested
+        const valid = roleFilter === 'all' 
+            ? matchesWithRole 
+            : matchesWithRole.filter(m => m.detectedRole === roleFilter);
+
+        if (valid.length === 0) {
+            resultsDiv.innerHTML = `<div class="card"><div class="card-body" style="padding:30px; text-align:center; color:#ff9f43;"><i class="fa-solid fa-filter fa-2x mb-10"></i><br>ไม่พบแมตช์ที่เป็นโรล <strong>${roleFilter}</strong> ใน 20 แมตช์ล่าสุด กรุณาเลือก "ทุก Role" ครับ</div></div>`;
+            return;
+        }
+
+        const n = valid.length;
+        const mmrData = StorageManager.getMmrData();
+        const rankInfo = StorageManager.getRankTierInfo(mmrData.currentMmr);
+
+        // Aggregate stats and role-weighted benchmarks
         let totK=0,totD=0,totA=0,totGPM=0,totXPM=0,totLH=0,totHD=0,totTD=0,totDur=0,wins=0;
+        let benchGPM=0, benchXPM=0, benchKDA=0, benchLH10=0, benchHD=0, benchTD=0, benchDeaths=0;
+
         valid.forEach(m => {
             totK += m.kills||0; totD += m.deaths||0; totA += m.assists||0;
             totGPM += m.gold_per_min||0; totXPM += m.xp_per_min||0;
@@ -4426,8 +4512,22 @@ async function runWeaknessAnalysis(steamId) {
             totDur += m.duration||0;
             const rad = m.player_slot < 128;
             if ((rad && m.radiant_win) || (!rad && !m.radiant_win)) wins++;
+
+            // Accumulate Role-Specific Benchmark for this exact match!
+            const rBench = (ROLE_BENCHMARKS[m.detectedRole] && ROLE_BENCHMARKS[m.detectedRole][rankInfo.tier]) 
+                ? ROLE_BENCHMARKS[m.detectedRole][rankInfo.tier] 
+                : ROLE_BENCHMARKS.Core.Archon;
+
+            benchGPM += rBench.gpm;
+            benchXPM += rBench.xpm;
+            benchKDA += rBench.kda;
+            benchLH10 += rBench.lh10;
+            benchHD += rBench.hdmg;
+            benchTD += rBench.tdmg;
+            benchDeaths += rBench.deaths;
         });
 
+        // Averaged player stats vs Averaged role benchmarks
         const avgD = Math.max(totD/n, 0.1);
         const avgDur = totDur/n;
         const stats = {
@@ -4436,13 +4536,18 @@ async function runWeaknessAnalysis(steamId) {
             lh10: (totLH/n) / (avgDur/600),
             hdmg: (totHD/n) / (avgDur/60),
             tdmg: totTD/n, deaths: totD/n,
-            kills: totK/n, assists: totA/n,
             winRate: ((wins/n)*100).toFixed(1), matchCount: n
         };
 
-        const mmrData = StorageManager.getMmrData();
-        const rankInfo = StorageManager.getRankTierInfo(mmrData.currentMmr);
-        const bench = RANK_BENCHMARKS[rankInfo.tier] || RANK_BENCHMARKS.Archon;
+        const bench = {
+            gpm: Math.round(benchGPM/n),
+            xpm: Math.round(benchXPM/n),
+            kda: parseFloat((benchKDA/n).toFixed(2)),
+            lh10: Math.round(benchLH10/n),
+            hdmg: Math.round(benchHD/n),
+            tdmg: Math.round(benchTD/n),
+            deaths: parseFloat((benchDeaths/n).toFixed(1))
+        };
 
         const scores = {
             gpm: Math.min(120, (stats.gpm/bench.gpm)*100),
@@ -4460,11 +4565,16 @@ async function runWeaknessAnalysis(steamId) {
         const grade = overallScore >= 110 ? 'S' : overallScore >= 95 ? 'A' : overallScore >= 80 ? 'B' : overallScore >= 65 ? 'C' : 'D';
         const gradeColor = grade==='S'?'#d4af37':grade==='A'?'#2ecc71':grade==='B'?'#4bcffa':grade==='C'?'#ff9f43':'#ff4d55';
 
+        // Count role breakdown
+        const roleCounts = {};
+        valid.forEach(m => roleCounts[m.detectedRole] = (roleCounts[m.detectedRole] || 0) + 1);
+        const roleBreakdownStr = Object.entries(roleCounts).map(([r, c]) => `${r}: ${c}m`).join(' | ');
+
         resultsDiv.innerHTML = `
             <div class="grid-layout mb-20" style="grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
                 <!-- Radar Chart -->
                 <div class="card" style="border-top:4px solid #a55eea;">
-                    <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-chart-radar" style="color:#a55eea;"></i> Radar Chart เทียบค่าเฉลี่ย ${rankInfo.name}</h3></div>
+                    <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-chart-radar" style="color:#a55eea;"></i> Radar Chart (ปรับตาม Role & แร้งก์ ${rankInfo.name})</h3></div>
                     <div class="card-body" style="padding:20px; text-align:center;">
                         <canvas id="weakness-radar-chart" width="380" height="380"></canvas>
                     </div>
@@ -4475,16 +4585,17 @@ async function runWeaknessAnalysis(steamId) {
                     <div class="card" style="border-top:4px solid ${gradeColor};">
                         <div class="card-body" style="padding:20px; text-align:center;">
                             <div style="font-size:56px; font-weight:800; color:${gradeColor}; text-shadow:0 0 20px ${gradeColor}44; font-family:Rajdhani,sans-serif;">${grade}</div>
-                            <div style="font-size:14px; color:#c0c9d8;">Overall Performance Score: <strong style="color:#fff;">${overallScore}%</strong></div>
-                            <div style="display:flex; justify-content:center; gap:20px; margin-top:12px; font-size:13px;">
+                            <div style="font-size:14px; color:#c0c9d8;">Overall Role Performance: <strong style="color:#fff;">${overallScore}%</strong></div>
+                            <div style="display:flex; justify-content:center; gap:16px; margin-top:10px; font-size:12px; flex-wrap:wrap;">
                                 <span style="color:#2ecc71;"><i class="fa-solid fa-arrow-trend-up"></i> Win Rate: <strong>${stats.winRate}%</strong></span>
                                 <span style="color:#c0c9d8;">แมตช์ที่วิเคราะห์: <strong>${stats.matchCount}</strong></span>
                             </div>
+                            <div style="margin-top:8px; font-size:11px; color:#8e95a5;">สัดส่วน Role: ${roleBreakdownStr}</div>
                         </div>
                     </div>
 
                     <div class="card">
-                        <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-chart-bar cyan-text"></i> สถิติเฉลี่ย vs ค่าเป้า ${rankInfo.tier}</h3></div>
+                        <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-chart-bar cyan-text"></i> สถิติของคุณ vs ค่าเป้าหมาย Role (${rankInfo.tier})</h3></div>
                         <div class="card-body" style="padding:16px;">
                             ${renderStatRow('💰 GPM', stats.gpm.toFixed(0), bench.gpm, scores.gpm)}
                             ${renderStatRow('⚡ XPM', stats.xpm.toFixed(0), bench.xpm, scores.xpm)}
@@ -4501,7 +4612,7 @@ async function runWeaknessAnalysis(steamId) {
             <!-- Weaknesses -->
             ${weakKeys.length > 0 ? `
             <div class="card mb-20" style="border-top:4px solid #ff4d55;">
-                <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="color:#ff4d55;"></i> จุดอ่อนที่ต้องแก้ไข (${weakKeys.length} ด้าน)</h3></div>
+                <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="color:#ff4d55;"></i> จุดอ่อนที่ต้องแก้ไขสำหรับ Role นี้ (${weakKeys.length} ด้าน)</h3></div>
                 <div class="card-body" style="padding:20px;">
                     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px;">
                         ${weakKeys.map(k => {
@@ -4519,7 +4630,7 @@ async function runWeaknessAnalysis(steamId) {
             <!-- Strengths -->
             ${strongKeys.length > 0 ? `
             <div class="card mb-20" style="border-top:4px solid #2ecc71;">
-                <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-medal" style="color:#2ecc71;"></i> จุดแข็งของคุณ (${strongKeys.length} ด้าน)</h3></div>
+                <div class="card-header"><h3 style="margin:0;"><i class="fa-solid fa-medal" style="color:#2ecc71;"></i> จุดแข็งของคุณใน Role นี้ (${strongKeys.length} ด้าน)</h3></div>
                 <div class="card-body" style="padding:20px;">
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
                         ${strongKeys.map(k => {
@@ -4541,12 +4652,12 @@ async function runWeaknessAnalysis(steamId) {
                     labels: ['GPM', 'XPM', 'KDA', 'Last Hit', 'Hero Dmg', 'Tower Dmg', 'Survival'],
                     datasets: [
                         {
-                            label: 'คุณ',
+                            label: 'คุณ (' + roleFilter + ')',
                             data: [scores.gpm, scores.xpm, scores.kda, scores.lh, scores.hdmg, scores.tdmg, scores.survival],
                             borderColor: '#a55eea', backgroundColor: 'rgba(165,94,234,0.15)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#a55eea'
                         },
                         {
-                            label: 'ค่าเฉลี่ย ' + rankInfo.tier,
+                            label: 'ค่าเฉลี่ย Role ' + rankInfo.tier,
                             data: [100,100,100,100,100,100,100],
                             borderColor: '#ff9f43', backgroundColor: 'rgba(255,159,67,0.06)', borderWidth: 2, borderDash: [6,3], pointRadius: 3, pointBackgroundColor: '#ff9f43'
                         }
