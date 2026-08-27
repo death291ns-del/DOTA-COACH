@@ -1038,24 +1038,82 @@ async function fetchHeroList() {
     }
 }
 
+// --- Helper: Auto-convert Steam64 ID or Profile URL to 32-bit Account ID ---
+function normalizeSteamId(input) {
+    if (!input) return '';
+    let str = input.toString().trim();
+    
+    // Extract digits if user pasted full URL (e.g. dotabuff.com/players/70388657)
+    const matches = str.match(/\d+/g);
+    if (matches) {
+        // Find 17-digit Steam64 or 7-10 digit Account ID
+        const found64 = matches.find(m => m.length === 17 && m.startsWith('7656119'));
+        if (found64) {
+            try {
+                return (BigInt(found64) - 76561197960265728n).toString();
+            } catch (e) {}
+        }
+        const found32 = matches.find(m => m.length >= 7 && m.length <= 10);
+        if (found32) return found32;
+        str = matches.join('');
+    }
+
+    // Direct Steam64 ID string (17 digits)
+    if (str.length === 17 && str.startsWith('7656119')) {
+        try {
+            return (BigInt(str) - 76561197960265728n).toString();
+        } catch (e) {}
+    }
+
+    return str;
+}
+
 async function syncOpenDotaMatches() {
-    const settings = StorageManager.getSettings();
+    const rawSettings = StorageManager.getSettings();
     const listBody = document.getElementById('api-matches-list');
     
-    if (!settings.steamId) {
+    if (!rawSettings.steamId) {
         alert('กรุณาไปที่หน้า Settings และตั้งค่า Steam ID ก่อนทำการเชื่อมโยงข้อมูล');
         switchTab('settings');
         return;
     }
-    
-    listBody.innerHTML = `<tr><td colspan="5" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลล่าสุดจาก OpenDota API...</td></tr>`;
+
+    const accountId = normalizeSteamId(rawSettings.steamId);
+    if (accountId !== rawSettings.steamId) {
+        // Auto-fix settings with normalized 32-bit ID
+        rawSettings.steamId = accountId;
+        StorageManager.saveSettings(rawSettings);
+        const inputEl = document.getElementById('settings-steamid');
+        if (inputEl) inputEl.value = accountId;
+    }
+
+    listBody.innerHTML = `<tr><td colspan="5" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลล่าสุดจาก OpenDota API (ID: ${accountId})...</td></tr>`;
     
     try {
-        const response = await fetch(`https://api.opendota.com/api/players/${settings.steamId}/matches?limit=20`);
-        if (!response.ok) throw new Error('API request failed');
+        const response = await fetch(`https://api.opendota.com/api/players/${accountId}/matches?limit=20`);
+        
+        if (response.status === 429) {
+            listBody.innerHTML = `<tr><td colspan="5" class="text-center style="color:#ff9f43;"><i class="fa-solid fa-clock"></i> OpenDota API ติดขีดจำกัดความถี่ (Rate Limit) กรุณารอ 10 วินาทีแล้วกดซิงค์ใหม่</td></tr>`;
+            return;
+        }
+
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
         
         const matches = await response.json();
         
+        if (!matches || !Array.isArray(matches) || matches.length === 0) {
+            listBody.innerHTML = `
+                <tr><td colspan="5" class="text-center" style="padding: 20px; color: #ff9f43;">
+                    <i class="fa-solid fa-eye-slash fa-2x mb-10"></i><br>
+                    <strong>ไม่พบแมตช์สาธารณะสำหรับ Steam ID: ${accountId}</strong><br>
+                    <small style="color: #c0c9d8;">กรุณาเปิดระบบ <em>"Expose Public Match Data"</em> ในการตั้งค่าเกม Dota 2 (Settings ➔ Social ➔ Expose Public Match Data)</small><br>
+                    <a href="https://www.opendota.com/players/${accountId}" target="_blank" class="btn btn-small btn-secondary mt-10" style="display:inline-block;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ตรวจสอบโปรไฟล์บน OpenDota
+                    </a>
+                </td></tr>`;
+            return;
+        }
+
         // Calculate matches played today (local time)
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
@@ -1073,22 +1131,30 @@ async function syncOpenDotaMatches() {
         renderApiMatches(matches.slice(0, 8));
         
         const badge = document.getElementById('connection-badge');
-        badge.className = 'badge badge-success';
-        badge.textContent = 'Active Player Sync';
+        if (badge) {
+            badge.className = 'badge badge-success';
+            badge.textContent = 'Active Player Sync';
+        }
         
-        fetchPlayerName(settings.steamId);
-        fetchCoachAnalysis(settings.steamId);
+        fetchPlayerName(accountId);
+        fetchCoachAnalysis(accountId);
         renderDashboard(); // Re-render target rings
         
     } catch (e) {
         console.error(e);
-        listBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">เกิดข้อผิดพลาดในการดึงข้อมูล โปรดตรวจสอบ Steam ID หรือลองใหม่อีกครั้ง</td></tr>`;
+        listBody.innerHTML = `
+            <tr><td colspan="5" class="text-center text-danger" style="padding:16px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> เกิดข้อผิดพลาดในการเชื่อมต่อ OpenDota (${e.message})<br>
+                <small style="color:#c0c9d8;">โปรดตรวจสอบว่าใส่ Steam 32-bit ID ถูกต้องหรือไม่ หรือลองกดซิงค์ใหม่อีกครั้ง</small>
+            </td></tr>`;
     }
 }
 
-async function fetchPlayerName(steamId) {
+async function fetchPlayerName(rawId) {
+    const accountId = normalizeSteamId(rawId);
+    if (!accountId) return;
     try {
-        const response = await fetch(`https://api.opendota.com/api/players/${steamId}`);
+        const response = await fetch(`https://api.opendota.com/api/players/${accountId}`);
         if (response.ok) {
             const data = await response.json();
             if (data.profile) {
@@ -1097,7 +1163,9 @@ async function fetchPlayerName(steamId) {
                 
                 if (data.profile.avatar) {
                     const avatarContainer = document.querySelector('.avatar-placeholder');
-                    avatarContainer.innerHTML = `<img src="${data.profile.avatar}" style="width: 100%; height: 100%; border-radius: 50%;">`;
+                    if (avatarContainer) {
+                        avatarContainer.innerHTML = `<img src="${data.profile.avatar}" style="width: 100%; height: 100%; border-radius: 50%;">`;
+                    }
                 }
             }
         }
