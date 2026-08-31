@@ -1568,10 +1568,19 @@ function renderApiMatches(matches) {
                     <i class="fa-solid fa-plus"></i> บันทึกข้อผิดพลาด
                 </button>
             </td>
+            <td>
+                <button class="btn btn-small btn-share-match" title="ดาวน์โหลดการ์ดแชร์" style="padding:4px 10px; border-radius:15px; background:linear-gradient(135deg,#a55eea,#8854d0); border:none; color:#fff; cursor:pointer;">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+            </td>
         `;
 
         tr.querySelector('.btn-review-match').addEventListener('click', () => {
             showMatchReviewModal(m, heroName, isWin, gradeInfo);
+        });
+
+        tr.querySelector('.btn-share-match').addEventListener('click', () => {
+            shareMatchCard(m, heroName, isWin, gradeInfo);
         });
         
         listBody.appendChild(tr);
