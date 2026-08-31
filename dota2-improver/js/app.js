@@ -4665,6 +4665,32 @@ async function runWeaknessAnalysis(steamId, roleFilter = 'all') {
         valid.forEach(m => roleCounts[m.detectedRole] = (roleCounts[m.detectedRole] || 0) + 1);
         const roleBreakdownStr = Object.entries(roleCounts).map(([r, c]) => `${r}: ${c}m`).join(' | ');
 
+        // Find best hero (highest win rate among heroes with ≥2 matches in rawMatches)
+        const heroStats = {};
+        rawMatches.forEach(m => {
+            const hName = cachedHeroes[m.hero_id] || `Hero ${m.hero_id}`;
+            if (!heroStats[hName]) heroStats[hName] = { wins: 0, games: 0 };
+            heroStats[hName].games++;
+            const rad = m.player_slot < 128;
+            if ((rad && m.radiant_win) || (!rad && !m.radiant_win)) heroStats[hName].wins++;
+        });
+        const bestHeroEntry = Object.entries(heroStats)
+            .filter(([, v]) => v.games >= 1)
+            .sort((a, b) => (b[1].wins / b[1].games) - (a[1].wins / a[1].games))[0];
+        const bestHeroName = bestHeroEntry ? bestHeroEntry[0] : 'Unknown';
+        const bestHeroWins = bestHeroEntry ? bestHeroEntry[1].wins : 0;
+        const bestHeroGames = bestHeroEntry ? bestHeroEntry[1].games : 0;
+        const bestHeroWR = bestHeroGames > 0 ? Math.round((bestHeroWins / bestHeroGames) * 100) : 0;
+
+        // Store weakness share data globally for share button
+        window.__weaknessShareData = {
+            grade, gradeColor, overallScore,
+            winRate: stats.winRate, matchCount: stats.matchCount,
+            rankName: rankInfo.name,
+            bestHeroName, bestHeroWR, bestHeroGames,
+            scores
+        };
+
         resultsDiv.innerHTML = `
             <div class="grid-layout mb-20" style="grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
                 <!-- Radar Chart -->
@@ -4686,6 +4712,9 @@ async function runWeaknessAnalysis(steamId, roleFilter = 'all') {
                                 <span style="color:#c0c9d8;">แมตช์ที่วิเคราะห์: <strong>${stats.matchCount}</strong></span>
                             </div>
                             <div style="margin-top:8px; font-size:11px; color:#8e95a5;">สัดส่วน Role: ${roleBreakdownStr}</div>
+                            <button id="btn-share-weakness-card" style="margin-top:14px; width:100%; padding:10px; border-radius:8px; background:linear-gradient(135deg,#a55eea,#8854d0); border:none; color:#fff; font-weight:700; font-size:13px; cursor:pointer; letter-spacing:0.5px;">
+                                <i class="fa-solid fa-camera"></i> ดาวน์โหลดการ์ดแชร์ Facebook 📸
+                            </button>
                         </div>
                     </div>
 
@@ -4765,6 +4794,11 @@ async function runWeaknessAnalysis(steamId, roleFilter = 'all') {
                 }
             });
         }
+
+        // Wire share button
+        document.getElementById('btn-share-weakness-card')?.addEventListener('click', () => {
+            shareWeaknessCard();
+        });
 
     } catch(e) {
         resultsDiv.innerHTML = '<div class="card"><div class="card-body" style="padding:20px;">❌ เกิดข้อผิดพลาด: ' + e.message + '</div></div>';
@@ -4956,5 +4990,160 @@ function renderMatchupBar(m, index, type) {
             '<div style="color:#8e95a5; font-size:10px;">' + advSign + m.advantage + '%</div>' +
         '</div>' +
     '</div>';
+}
+
+// ============================================================
+// 📸 Social Share Card Functions (html2canvas)
+// ============================================================
+
+async function triggerCardDownload(elementId, filename) {
+    const el = document.getElementById(elementId);
+    if (!el) { alert('เกิดข้อผิดพลาด: ไม่พบเทมเพลตการ์ด'); return; }
+
+    const container = document.getElementById('share-templates-container');
+    const origStyle = container.style.cssText;
+    container.style.cssText = 'position:fixed; left:0; top:0; z-index:99999; visibility:visible; pointer-events:none;';
+
+    try {
+        const canvas = await html2canvas(el, {
+            scale: 1, useCORS: true, allowTaint: true,
+            backgroundColor: null, width: 1200, height: 630, logging: false
+        });
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+    } catch(e) {
+        alert('ไม่สามารถสร้างรูปภาพได้: ' + e.message);
+    } finally {
+        container.style.cssText = origStyle;
+    }
+}
+
+function drawShareRadar(canvasId, scores) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const cx = w / 2, cy = h / 2;
+    const labels = ['GPM', 'XPM', 'KDA', 'LH', 'HeroDmg', 'Tower', 'Survival'];
+    const vals = [scores.gpm, scores.xpm, scores.kda, scores.lh, scores.hdmg, scores.tdmg, scores.survival];
+    const n = labels.length;
+    const R = Math.min(cx, cy) - 24;
+
+    ctx.clearRect(0, 0, w, h);
+
+    [100, 75, 50, 25].forEach(pct => {
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+            const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+            const r = (pct / 120) * R;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    });
+
+    for (let i = 0; i < n; i++) {
+        const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        const lx = cx + (R + 18) * Math.cos(angle);
+        const ly = cy + (R + 18) * Math.sin(angle);
+        ctx.fillStyle = '#c0c9d8';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labels[i], lx, ly);
+    }
+
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+        const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+        const r = (Math.min(vals[i], 120) / 120) * R;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(165,94,234,0.25)';
+    ctx.fill();
+    ctx.strokeStyle = '#a55eea';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+}
+
+async function shareWeaknessCard() {
+    const data = window.__weaknessShareData;
+    if (!data) { alert('กรุณาวิเคราะห์จุดอ่อนก่อนครับ'); return; }
+
+    document.getElementById('share-weakness-grade').textContent = data.grade;
+    document.getElementById('share-weakness-grade').style.color = data.gradeColor;
+    document.getElementById('share-weakness-score').textContent = 'Overall Score: ' + data.overallScore + '%';
+    document.getElementById('share-weakness-winrate').innerHTML = '<i class="fa-solid fa-arrow-trend-up"></i> Win Rate: <strong>' + data.winRate + '%</strong> (' + data.matchCount + ' Games)';
+    document.getElementById('share-weakness-rank').textContent = 'RANK: ' + data.rankName.toUpperCase();
+    document.getElementById('share-weakness-hero-name').textContent = data.bestHeroName;
+    document.getElementById('share-weakness-hero-stats').textContent = 'Win Rate: ' + data.bestHeroWR + '% (' + data.bestHeroGames + ' Games)';
+    document.getElementById('share-weakness-hero-avatar').style.backgroundImage = "url('" + getHeroImageUrl(data.bestHeroName) + "')";
+
+    drawShareRadar('share-radar-canvas', data.scores);
+    await new Promise(function(r) { setTimeout(r, 300); });
+    await triggerCardDownload('template-weakness-card', 'Dota2_AI_Weakness_' + data.grade + '_Grade.jpg');
+}
+
+function calculateMatchPerformance(m) {
+    const role = detectMatchRole(m);
+    const mmrData = StorageManager.getMmrData();
+    const rankInfo = StorageManager.getRankTierInfo(mmrData.currentMmr);
+    const rBench = (ROLE_BENCHMARKS[role] && ROLE_BENCHMARKS[role][rankInfo.tier])
+        ? ROLE_BENCHMARKS[role][rankInfo.tier]
+        : ROLE_BENCHMARKS.Core.Archon;
+
+    const farming = Math.min(100, Math.round(((m.gold_per_min || 0) / rBench.gpm) * 100));
+    const fighting = Math.min(100, Math.round((((m.kills || 0) + (m.assists || 0)) / Math.max(m.deaths || 1, 1)) / rBench.kda * 100));
+    const pushing = Math.min(100, Math.round(((m.tower_damage || 0) / Math.max(rBench.tdmg, 1)) * 100));
+    const survival = Math.min(100, Math.round((rBench.deaths / Math.max(m.deaths || 0.5, 0.5)) * 100));
+
+    return { farming: farming, fighting: fighting, pushing: pushing, survival: survival, role: role };
+}
+
+async function shareMatchCard(m, heroName, isWin, gradeInfo) {
+    const perf = calculateMatchPerformance(m);
+
+    var roleLabels = { Core: 'CORE (POS 1)', Mid: 'MID (POS 2)', Offlane: 'OFFLANE (POS 3)', Support: 'SUPPORT (POS 4/5)' };
+    document.getElementById('share-match-hero-role').textContent = 'ROLE: ' + (roleLabels[perf.role] || perf.role);
+    document.getElementById('share-match-result').textContent = isWin ? 'VICTORY' : 'DEFEAT';
+    document.getElementById('share-match-result').style.color = isWin ? '#2ecc71' : '#ff4d55';
+    document.getElementById('share-match-hero-name').textContent = heroName;
+    document.getElementById('share-match-kda').textContent = 'K/D/A: ' + m.kills + ' / ' + m.deaths + ' / ' + m.assists;
+    document.getElementById('share-match-details').innerHTML =
+        'GPM: ' + (m.gold_per_min || '—') + ' | XPM: ' + (m.xp_per_min || '—') + '<br>Last Hits: ' + (m.last_hits || '—') + ' | Hero Damage: ' + (m.hero_damage || 0).toLocaleString();
+    document.getElementById('share-match-grade').textContent = gradeInfo.grade;
+    document.getElementById('share-match-grade').style.color = isWin ? '#2ecc71' : '#ff9f43';
+
+    var avgPerf = Math.round((perf.farming + perf.fighting + perf.pushing + perf.survival) / 4);
+    document.getElementById('share-match-score').textContent = 'Match Score: ' + avgPerf + '%';
+
+    document.getElementById('template-match-card').style.borderColor = isWin ? '#2ecc71' : '#ff4d55';
+    document.getElementById('share-match-hero-avatar').style.backgroundImage = "url('" + getHeroImageUrl(heroName) + "')";
+    document.getElementById('share-match-hero-avatar').style.borderColor = isWin ? '#2ecc71' : '#ff4d55';
+
+    ['farming', 'fighting', 'pushing', 'survival'].forEach(function(key) {
+        var val = perf[key];
+        document.getElementById('share-bar-' + key).style.width = val + '%';
+        document.getElementById('share-bar-' + key + '-val').textContent = val + '%';
+    });
+
+    await new Promise(function(r) { setTimeout(r, 200); });
+    await triggerCardDownload('template-match-card', 'Dota2_' + heroName.replace(/ /g, '_') + '_' + gradeInfo.grade + 'Grade.jpg');
 }
 
