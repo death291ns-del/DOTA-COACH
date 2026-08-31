@@ -4269,10 +4269,113 @@ function showProSettingsModal() {
         if (e.target === modal) modal.remove();
     });
 }
+async function getHeroBase64Image(heroName) {
+    const url = getHeroImageUrl(heroName);
+    try {
+        const res = await fetchWithFallback(url);
+        const blob = await res.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve(url);
+            reader.readAsDataURL(blob);
+        });
+    } catch(e) {
+        return url;
+    }
+}
 
-// ============================================================
-// MAP LEARNING & WARDING PLAYBOOK MODULE
-// ============================================================
+async function shareWeaknessCard() {
+    const data = window.__weaknessShareData;
+    if (!data) { alert('กรุณาวิเคราะห์จุดอ่อนก่อนครับ'); return; }
+
+    document.getElementById('share-weakness-grade').textContent = data.grade;
+    document.getElementById('share-weakness-grade').style.color = data.gradeColor;
+    document.getElementById('share-weakness-score').textContent = 'Overall Score: ' + data.overallScore + '%';
+    document.getElementById('share-weakness-winrate').innerHTML = '<i class="fa-solid fa-arrow-trend-up"></i> Win Rate: <strong>' + data.winRate + '%</strong> (' + data.matchCount + ' Games)';
+    document.getElementById('share-weakness-rank').textContent = 'RANK: ' + data.rankName.toUpperCase();
+    document.getElementById('share-weakness-hero-name').textContent = data.bestHeroName;
+    document.getElementById('share-weakness-hero-stats').textContent = 'Win Rate: ' + data.bestHeroWR + '% (' + data.bestHeroGames + ' Games)';
+    
+    // Set base64 image for clean html2canvas render
+    const b64 = await getHeroBase64Image(data.bestHeroName);
+    const imgEl = document.getElementById('share-weakness-hero-img');
+    if (imgEl) imgEl.src = b64;
+
+    drawShareRadar('share-radar-canvas', data.scores);
+    await new Promise(function(r) { setTimeout(r, 400); });
+    await triggerCardDownload('template-weakness-card', 'Dota2_AI_Weakness_' + data.grade + '_Grade.jpg');
+}
+
+function calculateMatchPerformance(m) {
+    const role = detectMatchRole(m);
+    const mmrData = StorageManager.getMmrData();
+    const rankInfo = StorageManager.getRankTierInfo(mmrData.currentMmr);
+    const rBench = (ROLE_BENCHMARKS[role] && ROLE_BENCHMARKS[role][rankInfo.tier])
+        ? ROLE_BENCHMARKS[role][rankInfo.tier]
+        : ROLE_BENCHMARKS.Core.Archon;
+
+    // Smart fallback if GPM / Tower Damage is missing
+    const gpm = (m.gold_per_min && m.gold_per_min > 0) 
+        ? m.gold_per_min 
+        : Math.round(rBench.gpm * 0.85);
+
+    const tdmg = (m.tower_damage !== undefined && m.tower_damage !== null && m.tower_damage > 0) 
+        ? m.tower_damage 
+        : (role === 'Support' ? Math.round(rBench.tdmg * 0.7) : Math.round(rBench.tdmg * 0.4));
+
+    const kdaVal = ((m.kills || 0) + (m.assists || 0)) / Math.max(m.deaths || 1, 1);
+
+    const farming = Math.min(100, Math.max(35, Math.round((gpm / rBench.gpm) * 100)));
+    const fighting = Math.min(100, Math.max(35, Math.round((kdaVal / rBench.kda) * 100)));
+    
+    // Support pushing fairness
+    let pushingScore = Math.round((tdmg / Math.max(rBench.tdmg, 1)) * 100);
+    if (role === 'Support' && pushingScore < 50) {
+        pushingScore = 50 + Math.round(pushingScore * 0.4);
+    }
+    const pushing = Math.min(100, Math.max(35, pushingScore));
+    
+    const survival = Math.min(100, Math.max(35, Math.round((rBench.deaths / Math.max(m.deaths || 0.5, 0.5)) * 100)));
+
+    return { farming: farming, fighting: fighting, pushing: pushing, survival: survival, role: role, gpm: gpm, tdmg: tdmg };
+}
+
+async function shareMatchCard(m, heroName, isWin, gradeInfo) {
+    const perf = calculateMatchPerformance(m);
+
+    var roleLabels = { Core: 'CORE (POS 1)', Mid: 'MID (POS 2)', Offlane: 'OFFLANE (POS 3)', Support: 'SUPPORT (POS 4/5)' };
+    document.getElementById('share-match-hero-role').textContent = 'ROLE: ' + (roleLabels[perf.role] || perf.role);
+    document.getElementById('share-match-result').textContent = isWin ? 'VICTORY' : 'DEFEAT';
+    document.getElementById('share-match-result').style.color = isWin ? '#2ecc71' : '#ff4d55';
+    document.getElementById('share-match-hero-name').textContent = heroName;
+    document.getElementById('share-match-kda').textContent = 'K/D/A: ' + m.kills + ' / ' + m.deaths + ' / ' + m.assists;
+    document.getElementById('share-match-details').innerHTML =
+        'GPM: ' + (m.gold_per_min || perf.gpm) + ' | XPM: ' + (m.xp_per_min || '—') + '<br>Last Hits: ' + (m.last_hits || '—') + ' | Hero Damage: ' + (m.hero_damage || 0).toLocaleString();
+    document.getElementById('share-match-grade').textContent = gradeInfo.grade;
+    document.getElementById('share-match-grade').style.color = isWin ? '#2ecc71' : '#ff4d55';
+
+    var avgPerf = Math.round((perf.farming + perf.fighting + perf.pushing + perf.survival) / 4);
+    document.getElementById('share-match-score').textContent = 'Match Score: ' + avgPerf + '%';
+
+    document.getElementById('template-match-card').style.borderColor = isWin ? '#2ecc71' : '#ff4d55';
+    document.getElementById('share-match-hero-avatar').style.borderColor = isWin ? '#2ecc71' : '#ff4d55';
+
+    // Set Base64 image for clean cross-origin capture
+    const b64 = await getHeroBase64Image(heroName);
+    const imgEl = document.getElementById('share-match-hero-img');
+    if (imgEl) imgEl.src = b64;
+
+    ['farming', 'fighting', 'pushing', 'survival'].forEach(function(key) {
+        var val = perf[key];
+        document.getElementById('share-bar-' + key).style.width = val + '%';
+        document.getElementById('share-bar-' + key + '-val').textContent = val + '%';
+    });
+
+    await new Promise(function(r) { setTimeout(r, 400); });
+    await triggerCardDownload('template-match-card', 'Dota2_' + heroName.replace(/ /g, '_') + '_' + gradeInfo.grade + 'Grade.jpg');
+}
+
 function initMapGuide() {
     const container = document.getElementById('mapguide-container');
     if (!container) return;
