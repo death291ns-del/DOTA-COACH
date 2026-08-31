@@ -1116,7 +1116,7 @@ async function syncOpenDotaMatches() {
     listBody.innerHTML = `<tr><td colspan="5" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลล่าสุดจาก OpenDota API (ID: ${accountId})...</td></tr>`;
     
     try {
-        const response = await fetchWithFallback(`https://api.opendota.com/api/players/${accountId}/matches?limit=20`);
+        const response = await fetchWithFallback(`https://api.opendota.com/api/players/${accountId}/recentMatches`);
         
         if (response.status === 429) {
             listBody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#ff9f43;"><i class="fa-solid fa-clock"></i> OpenDota API ติดขีดจำกัดความถี่ (Rate Limit) กรุณารอ 10 วินาทีแล้วกดซิงค์ใหม่</td></tr>`;
@@ -4270,53 +4270,7 @@ function showProSettingsModal() {
     });
 }
 
-// ============================================================
-// MAP LEARNING & WARDING PLAYBOOK MODULE
-// ============================================================
-function initMapGuide() {
-    const container = document.getElementById('mapguide-container');
-    if (!container) return;
-
-    container.innerHTML = `
-        <!-- Official Real Dota 2 Map Visualizer -->
-        <div class="card mb-20" style="border-top: 4px solid var(--green);">
-            <div class="card-header" style="background:linear-gradient(135deg, rgba(46,204,113,0.1), rgba(15,16,21,0.95)); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <h3 style="margin:0;"><i class="fa-solid fa-map-location-dot green-text"></i> แผนที่จริง Dota 2 Patch Overview (4K Tactical Map)</h3>
-                    <p class="subtitle" style="margin-top:2px;">แผนที่จริงแสดงตำแหน่ง Base, River, Roshan Pits, Twin Gates, Lotus Pools และจุดยุทธศาสตร์หลัก</p>
-                </div>
-            </div>
-            <div class="card-body" style="padding:20px; text-align:center; background:rgba(0,0,0,0.4);">
-                <div style="position:relative; display:inline-block; border-radius:12px; overflow:hidden; border:2px solid rgba(46,204,113,0.3); box-shadow:0 12px 40px rgba(0,0,0,0.8); max-width:100%;">
-                    <img src="assets/dota2_map_real.png" alt="Dota 2 Official Real Map In-Game" style="width:100%; max-width:820px; height:auto; display:block; margin:0 auto; border-radius:8px;">
-                </div>
-                <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:14px; font-size:12px; color:#c0c9d8;">
-                    <span><i class="fa-solid fa-square green-text"></i> <strong>Radiant Base:</strong> ฐานฝั่งซ้ายล่าง</span>
-                    <span><i class="fa-solid fa-square crimson-text"></i> <strong>Dire Base:</strong> ฐานฝั่งขวาบน</span>
-                    <span><i class="fa-solid fa-water cyan-text"></i> <strong>River:</strong> แม่น้ำตัดกลางแผนที่</span>
-                    <span><i class="fa-solid fa-circle-dot purple-text"></i> <strong>Twin Gates:</strong> ประตูวาร์ปมุมแผนที่</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid-layout mb-20" style="grid-template-columns: 2fr 1fr; gap:20px; align-items:start;">
-            
-            <!-- Left Main Column: Map Zones & Warding Playbook -->
-            <div style="display:flex; flex-direction:column; gap:20px;">
-                
-                <!-- 1. Map Zones & Dead Lane Control -->
-                <div class="card">
-                    <div class="card-header" style="background:rgba(200,35,44,0.08); border-bottom:1px solid rgba(200,35,44,0.2);">
-                        <h3 style="margin:0;"><i class="fa-solid fa-skull-crossbones crimson-text"></i> 1. ยุทธศาสตร์คุมพื้นที่ & การอ่าน Dead Lane (Dead Lane Strategy)</h3>
-                    </div>
-                    <div class="card-body" style="padding:20px;">
-                        <p style="font-size:13px; color:#c0c9d8; margin-top:0; margin-bottom:16px; line-height:1.6;">
-                            <strong>"Dead Lane (เลนอันตราย/เลนตาย)"</strong> คือโซนที่มีอัตราการโดนซุ่มยิงสูงที่สุดใน Dota 2 มักเป็นเลนออฟเลนศัตรู หรือเลนที่ป้อม 1 ฝั่งเราพังไปแล้ว ศัตรูสามารถพก Smoke วาร์ปมาดักซุ่มฆ่าได้ใน 3 วินาที!
-                        </p>
-
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
-                            <!-- Dead Lane Box -->
-                            <div style="background:rgba(200,35,44,0.08); border-left:4px solid var(--crimson); padding:14px; border-radius:6px;">
+                        <div style="background:rgba(200,35,44,0.08); border-left:4px solid var(--crimson); padding:14px; border-radius:6px;">
                                 <strong class="crimson-text" style="font-size:14px;"><i class="fa-solid fa-triangle-exclamation"></i> 🔴 Dead Lane (เลนอันตราย)</strong>
                                 <ul style="margin:8px 0 0; padding-left:18px; font-size:12px; color:#ddd; line-height:1.5;">
                                     <li><strong>กฎเหล็ก Pos 1:</strong> ห้ามฟาร์มใน Dead Lane เด็ดขาดหากไม่มี BKB หรือวิชั่น!</li>
